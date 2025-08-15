@@ -2,3 +2,5 @@
 Multiplayer Word-Game  - Multiplayer-Wortratespiel als Vertiefung und Auffrischung von SignalR
 
 Basis: ASP.NET Core MVC/Razor Pages Projekt.
+
+Status: Klassen erstellen.
