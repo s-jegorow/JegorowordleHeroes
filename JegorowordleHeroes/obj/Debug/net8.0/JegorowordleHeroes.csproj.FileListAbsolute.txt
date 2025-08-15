@@ -1,0 +1,7 @@
+C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\JegorowordleHeroes.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\JegorowordleHeroes.AssemblyInfoInputs.cache
+C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\JegorowordleHeroes.AssemblyInfo.cs
+C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\JegorowordleHeroes.csproj.CoreCompileInputs.cache
+C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\JegorowordleHeroes.MvcApplicationPartsAssemblyInfo.cache
+C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\JegorowordleHeroes.RazorAssemblyInfo.cache
+C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\JegorowordleHeroes.RazorAssemblyInfo.cs
