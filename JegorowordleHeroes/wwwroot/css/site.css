@@ -1,22 +1,186 @@
-html {
-  font-size: 14px;
+:root {
+    --bg: #0f1020;
+    --fg: #e6e6e6;
+    --muted: #9aa0a6;
+    --ok: #538d4e;
+    --mid: #b59f3b;
+    --off: #3a3a3c;
+    --accent: #6ea8fe
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+* {
+    box-sizing: border-box
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+body.dark {
+    background: #0b0c17;
+    color: var(--fg);
+    font-family: system-ui,Segoe UI,Roboto,Arial
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+.header {
+    padding: 16px;
+    border-bottom: 1px solid #202230;
+    text-align: center
 }
 
-body {
-  margin-bottom: 60px;
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px
+}
+
+.top .names {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: end
+}
+
+input {
+    background: #14162a;
+    border: 1px solid #2a2d4a;
+    color: var(--fg);
+    padding: 8px;
+    border-radius: 6px
+}
+
+button {
+    background: #1e223a;
+    border: 1px solid #2e3256;
+    color: var(--fg);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer
+}
+
+    button:hover {
+        border-color: var(--accent)
+    }
+
+.status {
+    display: flex;
+    justify-content: space-between;
+    margin: 12px 0
+}
+
+.board {
+    display: grid;
+    grid-template-rows: repeat(6,1fr);
+    gap: 8px;
+    margin: 16px 0
+}
+
+.row {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 8px
+}
+
+.cell {
+    height: 58px;
+    border: 1px solid #2a2d4a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 22px;
+    border-radius: 8px;
+    background: #14162a
+}
+
+    .cell.ok {
+        background: var(--ok);
+        border-color: var(--ok)
+    }
+
+    .cell.mid {
+        background: var(--mid);
+        border-color: var(--mid)
+    }
+
+    .cell.off {
+        background: var(--off);
+        border-color: var(--off)
+    }
+
+.keyboard {
+    display: grid;
+    grid-template-columns: repeat(20,1fr);
+    gap: 6px
+}
+
+.key {
+    grid-column: span 2;
+    background: #1b1e33;
+    border: 1px solid #2a2d4a;
+    border-radius: 6px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer
+}
+
+    .key.wide {
+        grid-column: span 4
+    }
+
+    .key.ok {
+        background: var(--ok)
+    }
+
+    .key.mid {
+        background: var(--mid)
+    }
+
+    .key.off {
+        background: var(--off)
+    }
+/* Effekte */
+.win {
+    animation: winPop 800ms ease both
+}
+
+@keyframes winPop {
+    0% {
+        transform: scale(1)
+    }
+
+    50% {
+        transform: scale(1.05)
+    }
+
+    100% {
+        transform: scale(1)
+    }
+}
+
+.fail {
+    animation: failShake 600ms ease
+}
+
+@keyframes failShake {
+    10%,90% {
+        transform: translateX(-2px)
+    }
+
+    20%,80% {
+        transform: translateX(4px)
+    }
+
+    30%,50%,70% {
+        transform: translateX(-8px)
+    }
+
+    40%,60% {
+        transform: translateX(8px)
+    }
+}
+
+.message-success {
+    color: var(--ok)
+}
+
+.message-fail {
+    color: #ff6b6b
 }

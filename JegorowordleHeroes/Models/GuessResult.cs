@@ -1,13 +1,9 @@
-﻿public class GuessResult
+﻿namespace JegoroWordleHeroes.Models
 {
-    public string Word { get; }
-    public LetterResult[] LetterResults { get; }
-    public bool IsWinningGuess { get; }
-
-    public GuessResult(string word, LetterResult[] letterResults, bool isWinningGuess)
+    public class GuessResult
     {
-        Word = word;
-        LetterResults = letterResults;
-        IsWinningGuess = isWinningGuess;
+        public string Guess { get; set; } = "";
+        public LetterState[] Letters { get; set; } = new LetterState[5];
+        public bool IsWin { get; set; }
     }
 }
