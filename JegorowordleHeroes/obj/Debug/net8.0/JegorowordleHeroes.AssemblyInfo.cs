@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("JegorowordleHeroes")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+28587508f5dd09e5156551d26bdc7cb531818cf4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c347189ec4d26511d8d8d36c58be6e27af8bf959")]
 [assembly: System.Reflection.AssemblyProductAttribute("JegorowordleHeroes")]
 [assembly: System.Reflection.AssemblyTitleAttribute("JegorowordleHeroes")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

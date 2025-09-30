@@ -31,3 +31,4 @@ C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\refint\Jegoro
 C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\JegorowordleHeroes.pdb
 C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\JegorowordleHeroes.genruntimeconfig.cache
 C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\ref\JegorowordleHeroes.dll
+C:\Projekte\JegorowordleHeroes\JegorowordleHeroes\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
