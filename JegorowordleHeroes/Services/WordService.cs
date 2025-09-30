@@ -6,7 +6,7 @@ namespace JegoroWordleHeroes.Services
 {
     public class WordService
     {
-        // einfache Demo-Liste (de/en gemischt, 5 Buchstaben)
+        
         private static readonly string[] Words = new[]
         {
             "kater","farbe","holzs","steak","nacht","laser","eimer","taste","zebra",
