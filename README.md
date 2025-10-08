@@ -3,4 +3,4 @@ Multiplayer Word-Game  - Multiplayer-Wortratespiel als Vertiefung und Auffrischu
 
 Basis: ASP.NET Core MVC/Razor Pages Projekt.
 
-Status: Klassen erstellen.
+Status: Matchmaking funktioniert, Spiellogik hat noch Bugs.
