@@ -29,7 +29,7 @@ namespace JegoroWordleHeroes.Hubs
             {
                 await Clients.Group(roomCode).SendAsync("GameReady", 6, 5);
             }
-            return session.TargetWordMask; // nie das echte Wort zurückgeben
+            return session.TargetWordMask;
         }
 
         public async Task SubmitGuess(string roomCode, string guess)
@@ -65,14 +65,30 @@ namespace JegoroWordleHeroes.Hubs
             {
                 session.WinnerName = player.Name;
                 session.IsOver = true;
-                await Clients.Group(roomCode).SendAsync("GameOver", player.Name, true, session.TargetWord);
+                await Clients.Group(roomCode).SendAsync("GameOver", new {
+                    WinnerName = player.Name,
+                    ByWin = true,
+                    TargetWord = session.TargetWord,
+                    PlayerAGuesses = session.PlayerA?.Guesses.Count ?? 0,
+                    PlayerBGuesses = session.PlayerB?.Guesses.Count ?? 0,
+                    PlayerAName = session.PlayerA?.Name,
+                    PlayerBName = session.PlayerB?.Name
+                });
                 return;
             }
 
             if (session.AllPlayersExhausted(6))
             {
                 session.IsOver = true;
-                await Clients.Group(roomCode).SendAsync("GameOver", session.WinnerName, false, session.TargetWord);
+                await Clients.Group(roomCode).SendAsync("GameOver", new {
+                    WinnerName = session.WinnerName,
+                    ByWin = false,
+                    TargetWord = session.TargetWord,
+                    PlayerAGuesses = session.PlayerA?.Guesses.Count ?? 0,
+                    PlayerBGuesses = session.PlayerB?.Guesses.Count ?? 0,
+                    PlayerAName = session.PlayerA?.Name,
+                    PlayerBName = session.PlayerB?.Name
+                });
             }
         }
 
@@ -94,7 +110,6 @@ namespace JegoroWordleHeroes.Hubs
             var targetChars = target.ToCharArray();
             var used = new bool[5];
 
-            // Treffer an Position (grün)
             for (int i = 0; i < 5; i++)
             {
                 if (guess[i] == target[i])
@@ -103,7 +118,7 @@ namespace JegoroWordleHeroes.Hubs
                     used[i] = true;
                 }
             }
-            // Falscher Platz (gelb) / fehlt (grau)
+            
             for (int i = 0; i < 5; i++)
             {
                 if (letters[i] == LetterState.Correct) continue;
@@ -119,6 +134,7 @@ namespace JegoroWordleHeroes.Hubs
                 }
                 letters[i] = found ? LetterState.Misplaced : LetterState.Absent;
             }
+            
             return new GuessResult
             {
                 Guess = guess,

@@ -6,16 +6,15 @@ const p1 = document.getElementById('p1'), p2 = document.getElementById('p2');
 
 const letters = "QWERTZUIOPASDFGHJKLYXCVBNM".split("");
 const layout = ["QWERTZUIOP", "ASDFGHJKL", "YXCVBNM"];
-const stateKeys = {}; // Buchstabe -> best state
+const stateKeys = {};
 
 let currentRow = 0, currentCol = 0;
 let grid = Array.from({ length: 6 }, () => Array(5).fill(""));
 let connection = null;
 let roomCode = "", myName = "", otherName = "";
 let gameOver = false;
-let completedRows = []; // Speichert die CSS-Klassen für fertige Zeilen
+let completedRows = [];
 
-// Board render
 function renderBoard() {
     board.innerHTML = "";
     board.style.gridTemplateRows = `repeat(6,1fr)`;
@@ -25,7 +24,6 @@ function renderBoard() {
             const cell = document.createElement('div'); cell.className = "cell";
             cell.textContent = grid[r][c] || "";
             
-            // Für fertige Zeilen: gespeicherte CSS-Klassen wiederherstellen
             if (completedRows[r] && completedRows[r][c]) {
                 cell.className = completedRows[r][c];
                 cell.textContent = cell.textContent.toUpperCase();
@@ -38,7 +36,6 @@ function renderBoard() {
 }
 renderBoard();
 
-// Keyboard render
 function renderKeyboard() {
     keyboardEl.innerHTML = "";
     const rows = layout.map(r => r.split(""));
@@ -71,6 +68,7 @@ function press(ch) {
         renderBoard();
     }
 }
+
 function backspace() {
     if (gameOver) return;
     if (currentCol > 0) {
@@ -78,10 +76,12 @@ function backspace() {
         renderBoard();
     }
 }
+
 function showMessage(text, cls) {
     msg.className = cls || "";
     msg.textContent = text;
 }
+
 async function submit() {
     if (gameOver) return;
     if (currentCol !== 5) { showMessage("5 Buchstaben nötig", "message-fail"); return; }
@@ -91,7 +91,7 @@ async function submit() {
 
 function applyResult(rowIdx, result) {
     const row = board.children[rowIdx];
-    const rowClasses = []; // Speichere CSS-Klassen für diese Zeile
+    const rowClasses = [];
     
     for (let i = 0; i < 5; i++) {
         const cell = row.children[i];
@@ -114,7 +114,6 @@ function applyResult(rowIdx, result) {
         }
     }
     
-    // CSS-Klassen für diese Zeile speichern
     completedRows[rowIdx] = rowClasses;
     renderKeyboard();
 }
@@ -137,7 +136,6 @@ document.getElementById('join').onclick = async () => {
         .withAutomaticReconnect()
         .build();
 
-    // Hub Events
     connection.on("PlayersUpdated", (a, b) => {
         p1.textContent = a || "–";
         p2.textContent = b || "–";
@@ -164,27 +162,35 @@ document.getElementById('join').onclick = async () => {
         // optional: Statusmeldung
     });
 
-    connection.on("GameOver", (winnerName, byWin, targetWord) => {
+    connection.on("GameOver", (data) => {
         gameOver = true;
+        const { winnerName, byWin, targetWord, playerAGuesses, playerBGuesses, playerAName, playerBName } = data;
+        
+        let message = "";
+        let messageClass = "message-fail";
+        
         if (byWin) {
             if (winnerName === myName) {
-                showMessage("Gewonnen!", "message-success");
+                message = `Gewonnen mit ${currentRow + 1} Versuchen!`;
+                messageClass = "message-success";
                 board.classList.add("win");
             } else {
-                showMessage("Verloren!", "message-fail");
+                const winnerGuesses = winnerName === playerAName ? playerAGuesses : playerBGuesses;
+                message = `Verloren! ${winnerName} war mit ${winnerGuesses} Versuchen besser. Das Wort war: ${targetWord?.toUpperCase()}`;
                 board.classList.add("fail");
             }
         } else {
-            showMessage(`Runde vorbei! Das Wort war: ${targetWord?.toUpperCase()}`, "message-fail");
+            message = `Alle Versuche verbraucht! Das Lösungswort war: ${targetWord?.toUpperCase()}`;
             board.classList.add("fail");
         }
+        
+        showMessage(message, messageClass);
     });
 
     await connection.start();
     await connection.invoke("CreateOrJoin", roomCode, myName);
 };
 
-// Tastatur-Events
 document.addEventListener('keydown', (e) => {
     if (!connection) return;
     const k = e.key;
