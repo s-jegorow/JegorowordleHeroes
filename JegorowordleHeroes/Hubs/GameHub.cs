@@ -65,14 +65,14 @@ namespace JegoroWordleHeroes.Hubs
             {
                 session.WinnerName = player.Name;
                 session.IsOver = true;
-                await Clients.Group(roomCode).SendAsync("GameOver", player.Name, true);
+                await Clients.Group(roomCode).SendAsync("GameOver", player.Name, true, session.TargetWord);
                 return;
             }
 
             if (session.AllPlayersExhausted(6))
             {
                 session.IsOver = true;
-                await Clients.Group(roomCode).SendAsync("GameOver", session.WinnerName, false);
+                await Clients.Group(roomCode).SendAsync("GameOver", session.WinnerName, false, session.TargetWord);
             }
         }
 
