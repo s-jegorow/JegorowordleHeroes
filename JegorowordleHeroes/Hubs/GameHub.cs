@@ -40,7 +40,7 @@ namespace JegoroWordleHeroes.Hubs
             var player = session.FindByConnection(Context.ConnectionId);
             if (player is null || session.IsOver) return;
 
-            guess = (guess ?? "").Trim().ToLowerInvariant();
+            guess = (guess ?? "").Trim().ToLower();
 
             if (!_words.IsValid(guess) || guess.Length != 5)
             {
@@ -89,6 +89,7 @@ namespace JegoroWordleHeroes.Hubs
 
         private static GuessResult ScoreGuess(string guess, string target)
         {
+            target = target.ToLower();
             var letters = new LetterState[5];
             var targetChars = target.ToCharArray();
             var used = new bool[5];
