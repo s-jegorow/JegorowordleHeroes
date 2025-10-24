@@ -13,6 +13,7 @@ let grid = Array.from({ length: 6 }, () => Array(5).fill(""));
 let connection = null;
 let roomCode = "", myName = "", otherName = "";
 let gameOver = false;
+let completedRows = []; // Speichert die CSS-Klassen für fertige Zeilen
 
 // Board render
 function renderBoard() {
@@ -23,6 +24,13 @@ function renderBoard() {
         for (let c = 0; c < 5; c++) {
             const cell = document.createElement('div'); cell.className = "cell";
             cell.textContent = grid[r][c] || "";
+            
+            // Für fertige Zeilen: gespeicherte CSS-Klassen wiederherstellen
+            if (completedRows[r] && completedRows[r][c]) {
+                cell.className = completedRows[r][c];
+                cell.textContent = cell.textContent.toUpperCase();
+            }
+            
             row.appendChild(cell);
         }
         board.appendChild(row);
@@ -83,14 +91,31 @@ async function submit() {
 
 function applyResult(rowIdx, result) {
     const row = board.children[rowIdx];
+    const rowClasses = []; // Speichere CSS-Klassen für diese Zeile
+    
     for (let i = 0; i < 5; i++) {
         const cell = row.children[i];
         cell.textContent = result.guess[i].toUpperCase();
         const st = result.letters[i];
-        if (st === 2) { cell.classList.add("ok"); updateKey(result.guess[i], 'ok'); }
-        else if (st === 1) { cell.classList.add("mid"); updateKey(result.guess[i], 'mid'); }
-        else { cell.classList.add("off"); updateKey(result.guess[i], 'off'); }
+        if (st === 2) { 
+            cell.classList.add("ok"); 
+            updateKey(result.guess[i], 'ok'); 
+            rowClasses[i] = "cell ok";
+        }
+        else if (st === 1) { 
+            cell.classList.add("mid"); 
+            updateKey(result.guess[i], 'mid'); 
+            rowClasses[i] = "cell mid";
+        }
+        else { 
+            cell.classList.add("off"); 
+            updateKey(result.guess[i], 'off'); 
+            rowClasses[i] = "cell off";
+        }
     }
+    
+    // CSS-Klassen für diese Zeile speichern
+    completedRows[rowIdx] = rowClasses;
     renderKeyboard();
 }
 
@@ -139,7 +164,7 @@ document.getElementById('join').onclick = async () => {
         // optional: Statusmeldung
     });
 
-    connection.on("GameOver", (winnerName, byWin) => {
+    connection.on("GameOver", (winnerName, byWin, targetWord) => {
         gameOver = true;
         if (byWin) {
             if (winnerName === myName) {
@@ -150,7 +175,7 @@ document.getElementById('join').onclick = async () => {
                 board.classList.add("fail");
             }
         } else {
-            showMessage("Runde vorbei!", "message-fail");
+            showMessage(`Runde vorbei! Das Wort war: ${targetWord?.toUpperCase()}`, "message-fail");
             board.classList.add("fail");
         }
     });
