@@ -1,6 +1,5 @@
 ﻿using JegoroWordleHeroes.Models;
 using JegoroWordleHeroes.Services;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.SignalR;
 
 namespace JegoroWordleHeroes.Hubs

@@ -15,15 +15,23 @@ namespace JegoroWordleHeroes.Services
 
         public GameSession? RemoveConnection(string connectionId, out string? roomCode)
         {
-            roomCode = null;
             foreach (var kv in _sessions)
             {
                 var s = kv.Value;
-                if (s.PlayerA?.ConnectionId == connectionId) s.PlayerA.ConnectionId = "";
-                if (s.PlayerB?.ConnectionId == connectionId) s.PlayerB.ConnectionId = "";
-                roomCode = kv.Key;
-                return s;
+                bool isA = s.PlayerA?.ConnectionId == connectionId;
+                bool isB = s.PlayerB?.ConnectionId == connectionId;
+
+                if (isA || isB)
+                {
+                    if (isA) s.PlayerA!.ConnectionId = "";
+                    if (isB) s.PlayerB!.ConnectionId = "";
+
+                    roomCode = kv.Key;
+                    return s;
+                }
             }
+
+            roomCode = null;
             return null;
         }
     }

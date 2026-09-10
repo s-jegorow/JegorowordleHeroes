@@ -1,4 +1,4 @@
-namespace JegorowordleHeroes.Models
+namespace JegoroWordleHeroes.Models
 {
     public class ErrorViewModel
     {

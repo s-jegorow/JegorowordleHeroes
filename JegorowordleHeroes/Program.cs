@@ -1,13 +1,12 @@
 using JegoroWordleHeroes.Hubs;
 using JegoroWordleHeroes.Services;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
-builder.Services.AddSingleton<WordService>(); // liefert Zielwörter
+builder.Services.AddSingleton<WordService>(); // liefert ZielwÃ¶rter
 builder.Services.AddSingleton<GameRegistry>(); // Sessions verwalten
 
 var app = builder.Build();
