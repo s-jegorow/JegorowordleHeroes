@@ -10,7 +10,8 @@ const stateKeys = {};
 let currentRow = 0, currentCol = 0;
 let grid = Array.from({ length: 6 }, () => Array(5).fill(""));
 let connection = null;
-let roomCode = "", myName = "", opponentGuesses=0;
+let roomCode = "", myName = "";
+const playerId = crypto.randomUUID();
 let gameOver = false;
 let completedRows = [];
 
@@ -61,7 +62,7 @@ function renderKeyboard() {
 renderKeyboard();
 
 function press(ch) {
-    if (gameOver) return;
+    if (gameOver || currentRow >= 6) return;
     if (currentCol < 5) {
         grid[currentRow][currentCol++] = ch.toLowerCase();
         renderBoard();
@@ -69,7 +70,7 @@ function press(ch) {
 }
 
 function backspace() {
-    if (gameOver) return;
+    if (gameOver || currentRow >= 6) return;
     if (currentCol > 0) {
         grid[currentRow][--currentCol] = "";
         renderBoard();
@@ -82,7 +83,7 @@ function showMessage(text, cls) {
 }
 
 async function submit() {
-    if (gameOver) return;
+    if (gameOver || currentRow >= 6) return;
     if (currentCol !== 5) { showMessage("5 Buchstaben nötig", "message-fail"); return; }
     const guess = grid[currentRow].join("");
     await connection.invoke("SubmitGuess", roomCode, guess);
@@ -123,11 +124,23 @@ function updateKey(ch, st) {
     if (!cur || rank[st] > rank[cur]) stateKeys[ch.toUpperCase()] = st;
 }
 
-document.getElementById('join').onclick = async () => {
+const joinBtn = document.getElementById('join');
+
+async function leaveRoom() {
+    if (!connection) return;
+    await connection.stop();
+    connection = null;
+    joinBtn.disabled = false;
+}
+
+joinBtn.onclick = async () => {
+    if (connection) return;
     roomCode = document.getElementById('room').value.trim().toUpperCase();
     myName = document.getElementById('me').value.trim() || "Spieler";
 
     if (!roomCode) { showMessage("Bitte Session-Code angeben", "message-fail"); return; }
+
+    joinBtn.disabled = true;
 
     connection = new signalR.HubConnectionBuilder()
         .withUrl("/gamehub")
@@ -147,6 +160,14 @@ document.getElementById('join').onclick = async () => {
     connection.on("NoGuessesLeft", () => showMessage("Keine Versuche mehr", "message-fail"));
     connection.on("RoomFull", () => showMessage("Raum ist schon voll!", "message-fail"));
 
+    connection.on("PlayerLeft", (name) => {
+        showMessage(name + " hat die Verbindung verloren", "message-fail");
+    });
+
+    connection.onreconnected(async () => {
+        await connection.invoke("CreateOrJoin", roomCode, playerId, myName);
+    });
+
     connection.on("GuessAccepted", (res) => {
         applyResult(currentRow, res);
         if (!res.isWin) {
@@ -157,20 +178,19 @@ document.getElementById('join').onclick = async () => {
         }
     });
 
-    connection.on("OpponentGuessed", (name, res) => {
-        opponentGuesses++;
-        showMessage(name + " hat Versuch " + opponentGuesses + "/6 abgegeben");
+    connection.on("OpponentGuessed", (name, count) => {
+        showMessage(name + " hat Versuch " + count + "/6 abgegeben");
     });
 
     connection.on("GameOver", (data) => {
         gameOver = true;
-        const { winnerName, byWin, targetWord, playerAGuesses, playerBGuesses, playerAName, playerBName } = data;
+        const { winnerName, winnerId, byWin, targetWord, playerAGuesses, playerBGuesses, playerAName, playerBName } = data;
         
         let message = "";
         let messageClass = "message-fail";
         
         if (byWin) {
-            if (winnerName === myName) {
+            if (winnerId === playerId) {
                 message = `Gewonnen mit ${currentRow + 1} Versuchen!`;
                 messageClass = "message-success";
                 board.classList.add("win");
@@ -187,12 +207,19 @@ document.getElementById('join').onclick = async () => {
         showMessage(message, messageClass);
     });
 
-    await connection.start();
-    await connection.invoke("CreateOrJoin", roomCode, myName);
+    try {
+        await connection.start();
+        const mask = await connection.invoke("CreateOrJoin", roomCode, playerId, myName);
+        if (!mask) await leaveRoom();
+    } catch {
+        showMessage("Verbindung fehlgeschlagen", "message-fail");
+        await leaveRoom();
+    }
 };
 
 document.addEventListener('keydown', (e) => {
     if (!connection) return;
+    if (e.target.tagName === "INPUT") return;
     const k = e.key;
     if (/^[a-zA-Z]$/.test(k)) { press(k.toUpperCase()); }
     else if (k === "Backspace") { backspace(); }

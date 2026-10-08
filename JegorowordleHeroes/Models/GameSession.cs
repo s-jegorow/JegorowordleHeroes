@@ -21,22 +21,25 @@
 
         public bool IsReady => PlayerA != null && PlayerB != null;
 
-        public Player? AddOrReconnectPlayer(string connectionId, string name)
+        public Player? AddOrReconnectPlayer(string connectionId, string playerId, string name)
         {
-            if (PlayerA == null || PlayerA.Name == name)
+            if (PlayerA == null || PlayerA.Id == playerId)
             {
-                PlayerA ??= new Player { Name = name };
+                PlayerA ??= new Player { Id = playerId, Name = name };
                 PlayerA.ConnectionId = connectionId;
                 return PlayerA;
             }
-            if (PlayerB == null || PlayerB.Name == name)
+            if (PlayerB == null || PlayerB.Id == playerId)
             {
-                PlayerB ??= new Player { Name = name };
+                PlayerB ??= new Player { Id = playerId, Name = name };
                 PlayerB.ConnectionId = connectionId;
                 return PlayerB;
             }
             return null;
         }
+
+        public bool HasPlayer(string playerId)
+            => PlayerA?.Id == playerId || PlayerB?.Id == playerId;
 
         public Player? FindByConnection(string connectionId)
             => (PlayerA?.ConnectionId == connectionId) ? PlayerA
@@ -46,7 +49,7 @@
         public bool AllPlayersExhausted(int maxGuesses)
         {
             var a = PlayerA != null && PlayerA.Guesses.Count >= maxGuesses;
-            var b = PlayerB != null && PlayerB.Guesses.Count >= maxGuesses;
+            var b = PlayerB == null || PlayerB.Guesses.Count >= maxGuesses;
             return a && b;
         }
 

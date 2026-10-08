@@ -31,10 +31,17 @@ namespace JegoroWordleHeroes.Services
         public GameSession GetOrCreate(string roomCode, string targetWord)
             => _sessions.GetOrAdd(roomCode, _ => new GameSession(roomCode, targetWord));
 
+        public GameSession StartNew(string roomCode, string targetWord)
+        {
+            var session = new GameSession(roomCode, targetWord);
+            _sessions[roomCode] = session;
+            return session;
+        }
+
         public GameSession? Get(string roomCode)
             => _sessions.TryGetValue(roomCode, out var s) ? s : null;
 
-        public GameSession? RemoveConnection(string connectionId, out string? roomCode)
+        public GameSession? RemoveConnection(string connectionId, out string? roomCode, out string? playerName)
         {
             foreach (var kv in _sessions)
             {
@@ -44,8 +51,9 @@ namespace JegoroWordleHeroes.Services
 
                 if (isA || isB)
                 {
-                    if (isA) s.PlayerA!.ConnectionId = "";
-                    if (isB) s.PlayerB!.ConnectionId = "";
+                    var player = isA ? s.PlayerA! : s.PlayerB!;
+                    player.ConnectionId = "";
+                    playerName = player.Name;
 
                     roomCode = kv.Key;
                     return s;
@@ -53,6 +61,7 @@ namespace JegoroWordleHeroes.Services
             }
 
             roomCode = null;
+            playerName = null;
             return null;
         }
     }

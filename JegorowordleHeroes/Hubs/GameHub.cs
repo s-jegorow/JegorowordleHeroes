@@ -15,10 +15,21 @@ namespace JegoroWordleHeroes.Hubs
             _words = words;
         }
 
-        public async Task<string> CreateOrJoin(string roomCode, string playerName)
+        public async Task<string> CreateOrJoin(string roomCode, string playerId, string playerName)
         {
             var session = _registry.GetOrCreate(roomCode, _words.PickWord());
-            var player = session.AddOrReconnectPlayer(Context.ConnectionId, playerName);
+
+            if (session.IsOver && !session.HasPlayer(playerId))
+            {
+                foreach (var oldPlayer in new[] { session.PlayerA, session.PlayerB })
+                {
+                    if (oldPlayer != null && oldPlayer.ConnectionId != "")
+                        await Groups.RemoveFromGroupAsync(oldPlayer.ConnectionId, roomCode);
+                }
+                session = _registry.StartNew(roomCode, _words.PickWord());
+            }
+
+            var player = session.AddOrReconnectPlayer(Context.ConnectionId, playerId, playerName);
 
             if (player is null)
             {
@@ -30,7 +41,7 @@ namespace JegoroWordleHeroes.Hubs
             await Clients.Group(roomCode).SendAsync("PlayersUpdated",
                 session.PlayerA?.Name, session.PlayerB?.Name);
 
-            if (session.IsReady)
+            if (session.IsReady && !session.IsOver)
             {
                 await Clients.Group(roomCode).SendAsync("GameReady", 6, 5);
             }
@@ -65,7 +76,7 @@ namespace JegoroWordleHeroes.Hubs
 
             await Clients.Caller.SendAsync("GuessAccepted", result);
             await Clients.GroupExcept(roomCode, new[] { Context.ConnectionId })
-                         .SendAsync("OpponentGuessed", player.Name, result);
+                         .SendAsync("OpponentGuessed", player.Name, player.Guesses.Count);
 
             if (result.IsWin)
             {
@@ -73,6 +84,7 @@ namespace JegoroWordleHeroes.Hubs
                 session.IsOver = true;
                 await Clients.Group(roomCode).SendAsync("GameOver", new {
                     WinnerName = player.Name,
+                    WinnerId = player.Id,
                     ByWin = true,
                     TargetWord = session.TargetWord,
                     PlayerAGuesses = session.PlayerA?.Guesses.Count ?? 0,
@@ -100,11 +112,10 @@ namespace JegoroWordleHeroes.Hubs
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            var session = _registry.RemoveConnection(Context.ConnectionId, out var roomCode);
+            var session = _registry.RemoveConnection(Context.ConnectionId, out var roomCode, out var playerName);
             if (session != null && roomCode != null)
             {
-                await Clients.Group(roomCode).SendAsync("PlayersUpdated",
-                    session.PlayerA?.Name, session.PlayerB?.Name);
+                await Clients.Group(roomCode).SendAsync("PlayerLeft", playerName);
             }
             await base.OnDisconnectedAsync(exception);
         }
