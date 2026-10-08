@@ -5,6 +5,7 @@ namespace JegoroWordleHeroes.Services
 {
     public class GameRegistry
     {
+        //concurrentdict -> threadsicher
         private readonly ConcurrentDictionary<string, GameSession> _sessions = new();
 
         public GameSession GetOrCreate(string roomCode, string targetWord)

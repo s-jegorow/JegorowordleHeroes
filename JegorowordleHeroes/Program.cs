@@ -6,8 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
-builder.Services.AddSingleton<WordService>(); // liefert Zielwörter
-builder.Services.AddSingleton<GameRegistry>(); // Sessions verwalten
+builder.Services.AddSingleton<WordService>(); 
+builder.Services.AddSingleton<GameRegistry>(); 
 
 var app = builder.Build();
 

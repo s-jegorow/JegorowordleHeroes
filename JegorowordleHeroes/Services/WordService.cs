@@ -19,7 +19,7 @@ namespace JegoroWordleHeroes.Services
 
         public WordService(IWebHostEnvironment env)
         {
-            var path = Path.Combine(env.WebRootPath ?? env.ContentRootPath, "words.txt");
+            string path = Path.Combine(env.WebRootPath ?? env.ContentRootPath, "words.txt");
 
             string[] lines;
             try
@@ -32,16 +32,16 @@ namespace JegoroWordleHeroes.Services
             }
 
             _words = lines
-                .Select(l => l.Trim())
+                .Select(l => l.Trim().ToLower())
                 .Where(l => !string.IsNullOrWhiteSpace(l))
-                //.Where(l => l.Length == 5) // optional, falls nur 5-Buchstaben-Wörter erlaubt sind
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(l => l.Length == 5)
+                .Distinct()
                 .ToArray();
 
             if (_words.Length == 0)
                 _words = FallbackWords;
 
-            _dict = new HashSet<string>(_words.Select(w => w.ToLowerInvariant()));
+            _dict = new HashSet<string>(_words);
         }
 
         public string PickWord()
