@@ -20,6 +20,12 @@ namespace JegoroWordleHeroes.Hubs
             var session = _registry.GetOrCreate(roomCode, _words.PickWord());
             var player = session.AddOrReconnectPlayer(Context.ConnectionId, playerName);
 
+            if (player is null)
+            {
+                await Clients.Caller.SendAsync("RoomFull");
+                return string.Empty;
+            }
+
             await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
             await Clients.Group(roomCode).SendAsync("PlayersUpdated",
                 session.PlayerA?.Name, session.PlayerB?.Name);
@@ -35,6 +41,7 @@ namespace JegoroWordleHeroes.Hubs
         {
             var session = _registry.Get(roomCode);
             if (session is null) return;
+            session.LastActivity = DateTime.UtcNow;
 
             var player = session.FindByConnection(Context.ConnectionId);
             if (player is null || session.IsOver) return;

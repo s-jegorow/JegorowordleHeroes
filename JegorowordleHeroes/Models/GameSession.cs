@@ -6,6 +6,7 @@
         public string TargetWord { get; }
         public bool IsOver { get; set; }
         public string? WinnerName { get; set; }
+        public DateTime LastActivity { get; set; } = DateTime.UtcNow;
 
         public Player? PlayerA { get; private set; }
         public Player? PlayerB { get; private set; }
@@ -20,7 +21,7 @@
 
         public bool IsReady => PlayerA != null && PlayerB != null;
 
-        public Player AddOrReconnectPlayer(string connectionId, string name)
+        public Player? AddOrReconnectPlayer(string connectionId, string name)
         {
             if (PlayerA == null || PlayerA.Name == name)
             {
@@ -34,9 +35,7 @@
                 PlayerB.ConnectionId = connectionId;
                 return PlayerB;
             }
-            // Ersatz: überschreibe A bei drittem Join mit neuem Namen
-            PlayerA = new Player { Name = name, ConnectionId = connectionId };
-            return PlayerA;
+            return null;
         }
 
         public Player? FindByConnection(string connectionId)

@@ -8,10 +8,6 @@
             <input id="me" maxlength="12" placeholder="Spieler A" />
         </label>
         <label>
-            Gegner:
-            <input id="other" maxlength="12" placeholder="Spieler B" />
-        </label>
-        <label>
             Session-Code:
             <input id="room" maxlength="8" placeholder="z.B. JGH123" />
         </label>
@@ -29,5 +25,5 @@
 <section class="keyboard" id="keyboard"></section>
 
 @section Scripts {
-    <script src="~/js/game.js"></script>
+    <script src="~/js/game.js" asp-append-version="true"></script> @* cache busting gegen veralteten cache beim laden *@
 }

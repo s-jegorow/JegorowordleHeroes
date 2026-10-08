@@ -1,5 +1,4 @@
-﻿// UI-Grundaufbau
-const board = document.getElementById('board');
+﻿const board = document.getElementById('board');
 const keyboardEl = document.getElementById('keyboard');
 const msg = document.getElementById('message');
 const p1 = document.getElementById('p1'), p2 = document.getElementById('p2');
@@ -11,7 +10,7 @@ const stateKeys = {};
 let currentRow = 0, currentCol = 0;
 let grid = Array.from({ length: 6 }, () => Array(5).fill(""));
 let connection = null;
-let roomCode = "", myName = "", otherName = "";
+let roomCode = "", myName = "", opponentGuesses=0;
 let gameOver = false;
 let completedRows = [];
 
@@ -127,7 +126,6 @@ function updateKey(ch, st) {
 document.getElementById('join').onclick = async () => {
     roomCode = document.getElementById('room').value.trim().toUpperCase();
     myName = document.getElementById('me').value.trim() || "Spieler";
-    otherName = document.getElementById('other').value.trim() || "Gegner";
 
     if (!roomCode) { showMessage("Bitte Session-Code angeben", "message-fail"); return; }
 
@@ -147,6 +145,7 @@ document.getElementById('join').onclick = async () => {
 
     connection.on("InvalidGuess", () => showMessage("Ungültiges Wort", "message-fail"));
     connection.on("NoGuessesLeft", () => showMessage("Keine Versuche mehr", "message-fail"));
+    connection.on("RoomFull", () => showMessage("Raum ist schon voll!", "message-fail"));
 
     connection.on("GuessAccepted", (res) => {
         applyResult(currentRow, res);
@@ -159,7 +158,8 @@ document.getElementById('join').onclick = async () => {
     });
 
     connection.on("OpponentGuessed", (name, res) => {
-        // optional: Statusmeldung
+        opponentGuesses++;
+        showMessage(name + " hat Versuch " + opponentGuesses + "/6 abgegeben");
     });
 
     connection.on("GameOver", (data) => {

@@ -8,6 +8,26 @@ namespace JegoroWordleHeroes.Services
         //concurrentdict -> threadsicher
         private readonly ConcurrentDictionary<string, GameSession> _sessions = new();
 
+        private readonly Timer _timer;
+
+        public GameRegistry()
+        {
+            //aktivität prüfen, + aufräumen
+            _timer = new Timer(_ => Cleanup(), null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        }
+
+        private void Cleanup()
+        {
+            var cutoff = DateTime.UtcNow.AddMinutes(-30);
+            foreach (var kv in _sessions)
+            {
+                if (kv.Value.LastActivity < cutoff)
+                {
+                    _sessions.TryRemove(kv.Key, out _);
+                }
+            }
+        }
+
         public GameSession GetOrCreate(string roomCode, string targetWord)
             => _sessions.GetOrAdd(roomCode, _ => new GameSession(roomCode, targetWord));
 
