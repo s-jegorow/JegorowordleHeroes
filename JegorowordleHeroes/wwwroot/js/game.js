@@ -151,6 +151,12 @@ function applyResult(rowIdx, result) {
     });
 }
 
+function shakeRow(rowIdx) {
+    const row = board.children[rowIdx];
+    row.classList.add("shake");
+    row.addEventListener("animationend", () => row.classList.remove("shake"), { once: true });
+}
+
 function restoreState(guesses) {
     grid = Array.from({ length: 6 }, () => Array(5).fill(""));
     completedRows = [];
@@ -268,6 +274,15 @@ chatForm.onsubmit = async (e) => {
 
 const joinBtn = document.getElementById('join');
 
+document.getElementById('copy-link').onclick = async () => {
+    try {
+        await navigator.clipboard.writeText(location.href);
+        showMessage("Link kopiert", "message-success");
+    } catch {
+        showMessage("Kopieren nicht möglich, bitte Link aus der Adresszeile nehmen", "message-fail");
+    }
+};
+
 async function leaveRoom() {
     if (!connection) return;
     await connection.stop();
@@ -299,7 +314,10 @@ joinBtn.onclick = async () => {
         showMessage("Spiel bereit – viel Erfolg!", "message-success");
     });
 
-    connection.on("InvalidGuess", () => showMessage("Ungültiges Wort", "message-fail"));
+    connection.on("InvalidGuess", () => {
+        showMessage("Ungültiges Wort", "message-fail");
+        shakeRow(currentRow);
+    });
     connection.on("NoGuessesLeft", () => showMessage("Keine Versuche mehr", "message-fail"));
     connection.on("RoomFull", () => showMessage("Raum ist schon voll!", "message-fail"));
 
@@ -359,6 +377,7 @@ joinBtn.onclick = async () => {
         }
         
         showMessage(message, messageClass);
+        appendSystemMessage(message);
     });
 
     try {
@@ -368,6 +387,10 @@ joinBtn.onclick = async () => {
             chatOpenBtn.hidden = false;
             sessionStorage.setItem("roomCode", roomCode);
             sessionStorage.setItem("playerName", myName);
+            document.querySelector('.top .names').hidden = true;
+            document.getElementById('room-info').hidden = false;
+            document.getElementById('room-label').textContent = roomCode;
+            history.replaceState(null, "", "?room=" + encodeURIComponent(roomCode));
         } else {
             await leaveRoom();
         }
@@ -391,8 +414,15 @@ document.addEventListener('keydown', (e) => {
 });
 
 const savedRoom = sessionStorage.getItem("roomCode");
+// reload-check - sonst url-check ( - sonst nix)
 if (savedRoom) {
     document.getElementById('room').value = savedRoom;
     document.getElementById('me').value = sessionStorage.getItem("playerName") || "";
     joinBtn.click();
+} else {
+    const linkRoom = new URLSearchParams(location.search).get("room");
+    if (linkRoom) {
+        document.getElementById('room').value = linkRoom;
+        document.getElementById('me').focus();
+    }
 }

@@ -48,13 +48,23 @@ body.dark {
     align-items: end
 }
 
-    .top .names label {
-        flex: 1 1 140px;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 4px
-    }
+.top .names label {
+    flex: 1 1 140px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px
+}
+
+.room-info {
+    display: flex;
+    align-items: center;
+    gap: 8px
+}
+
+.room-info button {
+     margin-left: auto
+}
 
 input {
     background: #14162a;
@@ -377,8 +387,13 @@ button {
     }
 }
 
+.row.shake {
+    animation: failShake 400ms ease
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .cell.flip {
+    .cell.flip,
+    .row.shake {
         animation: none
     }
 }

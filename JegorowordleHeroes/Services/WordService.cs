@@ -19,8 +19,18 @@ namespace JegoroWordleHeroes.Services
 
         public WordService(IWebHostEnvironment env)
         {
-            string path = Path.Combine(env.WebRootPath ?? env.ContentRootPath, "words.txt");
+            string root = env.WebRootPath ?? env.ContentRootPath;
 
+            _words = LoadWords(Path.Combine(root, "words.txt"));
+            if (_words.Length == 0)
+                _words = FallbackWords;
+
+            _dict = new HashSet<string>(_words);
+            _dict.UnionWith(LoadWords(Path.Combine(root, "allowed.txt")));
+        }
+
+        private static string[] LoadWords(string path)
+        {
             string[] lines;
             try
             {
@@ -31,17 +41,11 @@ namespace JegoroWordleHeroes.Services
                 lines = Array.Empty<string>();
             }
 
-            _words = lines
+            return lines
                 .Select(l => l.Trim().ToLower())
-                .Where(l => !string.IsNullOrWhiteSpace(l))
                 .Where(l => l.Length == 5)
                 .Distinct()
                 .ToArray();
-
-            if (_words.Length == 0)
-                _words = FallbackWords;
-
-            _dict = new HashSet<string>(_words);
         }
 
         public string PickWord()
