@@ -337,6 +337,13 @@ button {
     border-top: 1px solid #202230
 }
 
+.chat-system {
+    align-self: center;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center
+}
+
 .chat-form input {
     flex: 1;
     min-width: 0

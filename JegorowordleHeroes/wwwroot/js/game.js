@@ -240,6 +240,15 @@ function appendChatMessage(senderId, name, text) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+// spielstatus im chat
+function appendSystemMessage(text) {
+    const item = document.createElement('div');
+    item.className = "chat-system";
+    item.textContent = text;
+    chatMessages.appendChild(item);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 
 chatOpenBtn.onclick = openChat;
 document.getElementById('chat-close').onclick = closeChat;
@@ -323,6 +332,7 @@ joinBtn.onclick = async () => {
 
     connection.on("OpponentGuessed", (name, count) => {
         showMessage(name + " hat Versuch " + count + "/6 abgegeben");
+        appendSystemMessage(name + " hat Versuch " + count + "/6 abgegeben");
     });
 
     connection.on("GameOver", async (data) => {
