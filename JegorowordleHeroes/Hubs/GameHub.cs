@@ -8,18 +8,22 @@ namespace JegoroWordleHeroes.Hubs
     {
         private readonly GameRegistry _registry;
         private readonly WordService _words;
+        private const int MaxChatLength = 200;
+
+        
 
         public GameHub(GameRegistry registry, WordService words)
         {
             _registry = registry;
             _words = words;
         }
+        
 
         public async Task<string> CreateOrJoin(string roomCode, string playerId, string playerName)
         {
             var session = _registry.GetOrCreate(roomCode, _words.PickWord());
 
-            if (session.IsOver && !session.HasPlayer(playerId))
+            if (session.IsOver)
             {
                 foreach (var oldPlayer in new[] { session.PlayerA, session.PlayerB })
                 {
@@ -38,6 +42,7 @@ namespace JegoroWordleHeroes.Hubs
             }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
+            await Clients.Caller.SendAsync("RestoreState", player.Guesses);
             await Clients.Group(roomCode).SendAsync("PlayersUpdated",
                 session.PlayerA?.Name, session.PlayerB?.Name);
 
@@ -108,6 +113,25 @@ namespace JegoroWordleHeroes.Hubs
                     PlayerBName = session.PlayerB?.Name
                 });
             }
+        }
+
+        public async Task SendChat(string roomCode, string text)
+        {
+            var session = _registry.Get(roomCode);
+            if (session is null) return;
+
+            var player = session.FindByConnection(Context.ConnectionId);
+            if (player is null) return;
+
+            text = (text ?? ""). Trim();
+            if (text.Length == 0) return;
+            // nur für konsolenhacks, wird auch schon client-seitig validiert
+            if (text.Length > MaxChatLength)
+                text = text.Substring(0, MaxChatLength);
+            
+            session.LastActivity = DateTime.UtcNow;
+            await Clients.Group(roomCode).SendAsync("ChatMessage", player.Id, player.Name, text);
+            
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
