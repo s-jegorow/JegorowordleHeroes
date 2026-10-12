@@ -2,22 +2,22 @@
     Layout = "_Layout";
 }
 <section class="top">
+    <div class="mode-switch" role="group" aria-label="Spielart">
+        <button id="mode-friend" type="button" class="active" aria-pressed="true">Mit Freund</button>
+        <button id="mode-random" type="button" aria-pressed="false">Zufallsgegner</button>
+    </div>
     <div class="names">
-        <label>
-            Dein Name:
-            <input id="me" maxlength="12" placeholder="Spieler A" />
-        </label>
-        <label>
-            Session-Code:
-            <input id="room" maxlength="8" placeholder="z.B. JGH123" />
-        </label>
-        <button id="join">Beitreten/Start</button>
+        <input id="me" maxlength="12" placeholder="Dein Name" aria-label="Dein Name" />
+        <input id="room" maxlength="8" placeholder="Session-Code" aria-label="Session-Code" />
+        <button id="join">Beitreten</button>
+        <button id="search" type="button" disabled hidden>Gegner suchen</button>
     </div>
 </section>
 
 <section class="status">
     <div>Spieler: <span id="p1">–</span> vs <span id="p2">–</span></div>
     <div id="message"></div>
+    <button id="rematch" type="button" hidden>Revanche</button>
 </section>
 
 <section id="board" class="board" aria-label="Wordle-Felder"></section>

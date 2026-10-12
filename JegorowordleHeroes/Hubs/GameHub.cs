@@ -23,7 +23,7 @@ namespace JegoroWordleHeroes.Hubs
         {
             var session = _registry.GetOrCreate(roomCode, _words.PickWord());
 
-            if (session.IsOver)
+            if (session.IsOver && !session.HasPlayer(playerId))
             {
                 foreach (var oldPlayer in new[] { session.PlayerA, session.PlayerB })
                 {
@@ -49,6 +49,10 @@ namespace JegoroWordleHeroes.Hubs
             if (session.IsReady && !session.IsOver)
             {
                 await Clients.Group(roomCode).SendAsync("GameReady", 6, 5);
+            }
+            if (session.IsOver)
+            {
+                await Clients.Caller.SendAsync("GameOver", BuildGameOver(session));
             }
             return session.TargetWordMask;
         }
@@ -85,34 +89,57 @@ namespace JegoroWordleHeroes.Hubs
 
             if (result.IsWin)
             {
-                session.WinnerName = player.Name;
+                session.Winner = player;
                 session.IsOver = true;
-                await Clients.Group(roomCode).SendAsync("GameOver", new {
-                    WinnerName = player.Name,
-                    WinnerId = player.Id,
-                    ByWin = true,
-                    TargetWord = session.TargetWord,
-                    PlayerAGuesses = session.PlayerA?.Guesses.Count ?? 0,
-                    PlayerBGuesses = session.PlayerB?.Guesses.Count ?? 0,
-                    PlayerAName = session.PlayerA?.Name,
-                    PlayerBName = session.PlayerB?.Name
-                });
+                await Clients.Group(roomCode).SendAsync("GameOver", BuildGameOver(session));
                 return;
             }
 
             if (session.AllPlayersExhausted(6))
             {
                 session.IsOver = true;
-                await Clients.Group(roomCode).SendAsync("GameOver", new {
-                    WinnerName = session.WinnerName,
-                    ByWin = false,
-                    TargetWord = session.TargetWord,
-                    PlayerAGuesses = session.PlayerA?.Guesses.Count ?? 0,
-                    PlayerBGuesses = session.PlayerB?.Guesses.Count ?? 0,
-                    PlayerAName = session.PlayerA?.Name,
-                    PlayerBName = session.PlayerB?.Name
-                });
+                await Clients.Group(roomCode).SendAsync("GameOver", BuildGameOver(session));
             }
+        }
+
+        public async Task RequestRematch(string roomCode)
+        {
+            var session = _registry.Get(roomCode);
+            if (session is null || !session.IsOver) return;
+
+            var player = session.FindByConnection(Context.ConnectionId);
+            if (player is null) return;
+
+            var opponent = session.GetOpponent(player);
+            if (opponent is null || opponent.ConnectionId == "")
+            {
+                await Clients.Caller.SendAsync("RematchUnavailable");
+                return;
+            }
+
+            session.RematchVotes.Add(player.Id);
+
+            if (!session.RematchVotes.Contains(opponent.Id))
+            {
+                await Clients.Client(opponent.ConnectionId).SendAsync("RematchRequested", player.Name);
+                return;
+            }
+
+            session.Reset(_words.PickWord());
+            await Clients.Group(roomCode).SendAsync("RestoreState", new List<GuessResult>());
+            await Clients.Group(roomCode).SendAsync("GameReady", 6, 5);
+        }
+
+        private static object BuildGameOver(GameSession session)
+        {
+            return new
+            {
+                WinnerName = session.Winner?.Name,
+                WinnerId = session.Winner?.Id,
+                WinnerGuesses = session.Winner?.Guesses.Count ?? 0,
+                ByWin = session.Winner != null,
+                TargetWord = session.TargetWord
+            };
         }
 
         public async Task SendChat(string roomCode, string text)

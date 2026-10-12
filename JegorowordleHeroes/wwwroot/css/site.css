@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --bg: #0f1020;
     --fg: #e6e6e6;
     --muted: #9aa0a6;
@@ -41,19 +41,43 @@ body.dark {
     padding: 16px 16px 80px;
 }
 
-.top .names {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: end
+.mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    padding: 3px;
+    margin-bottom: 8px;
+    background: #14162a;
+    border: 1px solid #2a2d4a;
+    border-radius: 8px
 }
 
-.top .names label {
-    flex: 1 1 140px;
-    min-width: 0;
+    .mode-switch button {
+        padding: 6px 8px;
+        background: transparent;
+        border-color: transparent;
+        color: var(--muted)
+    }
+
+    .mode-switch button.active {
+        background: #2a3156;
+        border-color: var(--accent);
+        color: var(--fg)
+    }
+
+.top .names {
     display: flex;
-    flex-direction: column;
-    gap: 4px
+    gap: 8px
+}
+
+    .top .names input {
+        flex: 1 1 0;
+        min-width: 0
+    }
+
+.rematch-requested {
+    background: #22305a;
+    border-color: var(--accent)
 }
 
 .room-info {
@@ -365,7 +389,7 @@ button {
     }
 
         .header img {
-            max-height: 80px
+            max-height: 56px
         }
 }
 

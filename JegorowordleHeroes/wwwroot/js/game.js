@@ -163,6 +163,7 @@ function restoreState(guesses) {
     stateKeys = {};
     gameOver = false;
     board.classList.remove("win", "fail");
+    rematchBtn.hidden = true;
 
     guesses.forEach((result, r) => {
         grid[r] = result.guess.split("");
@@ -273,6 +274,42 @@ chatForm.onsubmit = async (e) => {
 };
 
 const joinBtn = document.getElementById('join');
+const searchBtn = document.getElementById('search');
+const roomInput = document.getElementById('room');
+const modeFriendBtn = document.getElementById('mode-friend');
+const modeRandomBtn = document.getElementById('mode-random');
+const rematchBtn = document.getElementById('rematch');
+
+function setMode(random) {
+    modeFriendBtn.classList.toggle('active', !random);
+    modeRandomBtn.classList.toggle('active', random);
+    modeFriendBtn.setAttribute('aria-pressed', String(!random));
+    modeRandomBtn.setAttribute('aria-pressed', String(random));
+    roomInput.hidden = random;
+    joinBtn.hidden = random;
+    searchBtn.hidden = !random;
+}
+
+modeFriendBtn.onclick = () => setMode(false);
+modeRandomBtn.onclick = () => setMode(true);
+
+function showRematchButton() {
+    rematchBtn.hidden = false;
+    rematchBtn.disabled = false;
+    rematchBtn.textContent = "Revanche";
+    rematchBtn.classList.remove("rematch-requested");
+}
+
+rematchBtn.onclick = async () => {
+    rematchBtn.disabled = true;
+    rematchBtn.textContent = "Warte auf Gegner …";
+    try {
+        await connection.invoke("RequestRematch", roomCode);
+    } catch {
+        showMessage("Revanche konnte nicht angefragt werden", "message-fail");
+        showRematchButton();
+    }
+};
 
 document.getElementById('copy-link').onclick = async () => {
     try {
@@ -335,6 +372,17 @@ joinBtn.onclick = async () => {
 
     connection.on("RestoreState", restoreState);
 
+    connection.on("RematchRequested", (name) => {
+        showMessage(name + " will eine Revanche!", "message-success");
+        appendSystemMessage(name + " will eine Revanche");
+        rematchBtn.classList.add("rematch-requested");
+    });
+
+    connection.on("RematchUnavailable", () => {
+        showMessage("Dein Gegner ist nicht mehr da", "message-fail");
+        rematchBtn.textContent = "Revanche";
+    });
+
     connection.onreconnected(async () => {
         await connection.invoke("CreateOrJoin", roomCode, playerId, myName);
     });
@@ -356,18 +404,17 @@ joinBtn.onclick = async () => {
     connection.on("GameOver", async (data) => {
         gameOver = true;
         await revealDone;
-        const { winnerName, winnerId, byWin, targetWord, playerAGuesses, playerBGuesses, playerAName, playerBName } = data;
-        
+        const { winnerName, winnerId, winnerGuesses, byWin, targetWord } = data;
+
         let message = "";
         let messageClass = "message-fail";
         
         if (byWin) {
             if (winnerId === playerId) {
-                message = `Gewonnen mit ${currentRow + 1} Versuchen!`;
+                message = `Gewonnen mit ${winnerGuesses} Versuchen!`;
                 messageClass = "message-success";
                 board.classList.add("win");
             } else {
-                const winnerGuesses = winnerName === playerAName ? playerAGuesses : playerBGuesses;
                 message = `Verloren! ${winnerName} war mit ${winnerGuesses} Versuchen besser. Das Wort war: ${targetWord?.toUpperCase()}`;
                 board.classList.add("fail");
             }
@@ -378,6 +425,7 @@ joinBtn.onclick = async () => {
         
         showMessage(message, messageClass);
         appendSystemMessage(message);
+        showRematchButton();
     });
 
     try {
@@ -387,7 +435,7 @@ joinBtn.onclick = async () => {
             chatOpenBtn.hidden = false;
             sessionStorage.setItem("roomCode", roomCode);
             sessionStorage.setItem("playerName", myName);
-            document.querySelector('.top .names').hidden = true;
+            document.querySelector('.top').hidden = true;
             document.getElementById('room-info').hidden = false;
             document.getElementById('room-label').textContent = roomCode;
             history.replaceState(null, "", "?room=" + encodeURIComponent(roomCode));
