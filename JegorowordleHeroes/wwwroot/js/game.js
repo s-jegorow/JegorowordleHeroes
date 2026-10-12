@@ -14,7 +14,7 @@ let currentRow = 0, currentCol = 0;
 let grid = Array.from({ length: 6 }, () => Array(5).fill(""));
 let connection = null;
 let roomCode = "", myName = "";
-const playerId = loadPlayerId();
+let playerId = loadPlayerId();
 let gameOver = false;
 let completedRows = [];
 let inputLocked = false;
@@ -164,6 +164,7 @@ function restoreState(guesses) {
     gameOver = false;
     board.classList.remove("win", "fail");
     rematchBtn.hidden = true;
+    newOpponentBtn.hidden = true;
 
     guesses.forEach((result, r) => {
         grid[r] = result.guess.split("");
@@ -279,6 +280,20 @@ const roomInput = document.getElementById('room');
 const modeFriendBtn = document.getElementById('mode-friend');
 const modeRandomBtn = document.getElementById('mode-random');
 const rematchBtn = document.getElementById('rematch');
+const newOpponentBtn = document.getElementById('new-opponent');
+const meInput = document.getElementById('me');
+const topSection = document.querySelector('.top');
+const searchInfo = document.getElementById('search-info');
+const searchTime = document.getElementById('search-time');
+const roomInfo = document.getElementById('room-info');
+const roomLabel = document.getElementById('room-label');
+const copyLinkBtn = document.getElementById('copy-link');
+const leaveRoomBtn = document.getElementById('leave-room');
+const currentIdentity = meInput.readOnly ? meInput.value : "";
+const pageTitle = document.title;
+let searching = false;
+let searchTimer = null;
+let isRandomRoom = false;
 
 function setMode(random) {
     modeFriendBtn.classList.toggle('active', !random);
@@ -311,7 +326,7 @@ rematchBtn.onclick = async () => {
     }
 };
 
-document.getElementById('copy-link').onclick = async () => {
+copyLinkBtn.onclick = async () => {
     try {
         await navigator.clipboard.writeText(location.href);
         showMessage("Link kopiert", "message-success");
@@ -321,22 +336,18 @@ document.getElementById('copy-link').onclick = async () => {
 };
 
 async function leaveRoom() {
+    stopSearchTimer();
+    searching = false;
     if (!connection) return;
     await connection.stop();
     connection = null;
     joinBtn.disabled = false;
+    searchBtn.disabled = false;
     sessionStorage.removeItem("roomCode");
+    sessionStorage.removeItem("randomRoom");
 }
 
-joinBtn.onclick = async () => {
-    if (connection) return;
-    roomCode = document.getElementById('room').value.trim().toUpperCase();
-    myName = document.getElementById('me').value.trim() || "Spieler";
-
-    if (!roomCode) { showMessage("Bitte Session-Code angeben", "message-fail"); return; }
-
-    joinBtn.disabled = true;
-
+async function connect() {
     connection = new signalR.HubConnectionBuilder()
         .withUrl("/gamehub")
         .withAutomaticReconnect()
@@ -383,8 +394,17 @@ joinBtn.onclick = async () => {
         rematchBtn.textContent = "Revanche";
     });
 
+    connection.on("Matched", (code) => {
+        if (document.hidden) document.title = "Gegner gefunden!";
+        joinRoom(code, true).catch(() => showMessage("Verbindung fehlgeschlagen", "message-fail"));
+    });
+
     connection.onreconnected(async () => {
-        await connection.invoke("CreateOrJoin", roomCode, playerId, myName);
+        if (searching) {
+            await connection.invoke("FindOpponent", playerId);
+        } else {
+            await connection.invoke("CreateOrJoin", roomCode, playerId, myName);
+        }
     });
 
     connection.on("GuessAccepted", (res) => {
@@ -404,18 +424,19 @@ joinBtn.onclick = async () => {
     connection.on("GameOver", async (data) => {
         gameOver = true;
         await revealDone;
-        const { winnerName, winnerId, winnerGuesses, byWin, targetWord } = data;
+        const { winnerName, winnerId, winnerGuesses, points, byWin, targetWord, restored } = data;
 
         let message = "";
         let messageClass = "message-fail";
         
         if (byWin) {
             if (winnerId === playerId) {
-                message = `Gewonnen mit ${winnerGuesses} Versuchen!`;
+                message = `Gewonnen im ${winnerGuesses}. Versuch! +${points} Punkte`;
                 messageClass = "message-success";
+                if (!restored) addPoints(points);
                 board.classList.add("win");
             } else {
-                message = `Verloren! ${winnerName} war mit ${winnerGuesses} Versuchen besser. Das Wort war: ${targetWord?.toUpperCase()}`;
+                message = `Verloren! ${winnerName} hat es im ${winnerGuesses}. Versuch geschafft. Das Wort war: ${targetWord?.toUpperCase()}`;
                 board.classList.add("fail");
             }
         } else {
@@ -426,34 +447,146 @@ joinBtn.onclick = async () => {
         showMessage(message, messageClass);
         appendSystemMessage(message);
         showRematchButton();
+        newOpponentBtn.hidden = !isRandomRoom;
     });
 
+    await connection.start();
+}
+
+async function joinRoom(code, random) {
+    roomCode = code;
+    const joinedId = await connection.invoke("CreateOrJoin", roomCode, playerId, myName);
+    if (!joinedId) {
+        await leaveRoom();
+        return;
+    }
+
+    playerId = joinedId;
+    isRandomRoom = random;
+    searching = false;
+    stopSearchTimer();
+    searchInfo.hidden = true;
+    topSection.hidden = true;
+    chatOpenBtn.hidden = false;
+    roomInfo.hidden = false;
+    sessionStorage.setItem("roomCode", roomCode);
+    sessionStorage.setItem("playerName", myName);
+    sessionStorage.setItem("identity", currentIdentity);
+
+    if (random) {
+        sessionStorage.setItem("randomRoom", "1");
+        roomLabel.textContent = "Zufallsspiel";
+        copyLinkBtn.hidden = true;
+        history.replaceState(null, "", location.pathname);
+    } else {
+        sessionStorage.removeItem("randomRoom");
+        roomLabel.textContent = "Raum " + roomCode;
+        copyLinkBtn.hidden = false;
+        history.replaceState(null, "", "?room=" + encodeURIComponent(roomCode));
+    }
+}
+
+async function startRoom(code, random) {
+    joinBtn.disabled = true;
     try {
-        await connection.start();
-        const mask = await connection.invoke("CreateOrJoin", roomCode, playerId, myName);
-        if (mask) {
-            chatOpenBtn.hidden = false;
-            sessionStorage.setItem("roomCode", roomCode);
-            sessionStorage.setItem("playerName", myName);
-            document.querySelector('.top').hidden = true;
-            document.getElementById('room-info').hidden = false;
-            document.getElementById('room-label').textContent = roomCode;
-            history.replaceState(null, "", "?room=" + encodeURIComponent(roomCode));
-        } else {
-            await leaveRoom();
-        }
+        await connect();
+        await joinRoom(code, random);
     } catch {
         showMessage("Verbindung fehlgeschlagen", "message-fail");
         await leaveRoom();
     }
+}
+
+joinBtn.onclick = async () => {
+    if (connection) return;
+    const code = roomInput.value.trim().toUpperCase();
+    myName = meInput.value.trim() || "Spieler";
+
+    if (!code) { showMessage("Bitte Session-Code angeben", "message-fail"); return; }
+
+    await startRoom(code, false);
 };
+
+function startSearchTimer() {
+    const startedAt = Date.now();
+    searchTime.textContent = "0:00";
+    searchTimer = setInterval(() => {
+        const seconds = Math.floor((Date.now() - startedAt) / 1000);
+        const restSeconds = String(seconds % 60).padStart(2, "0");
+        searchTime.textContent = `${Math.floor(seconds / 60)}:${restSeconds}`;
+    }, 1000);
+}
+
+function stopSearchTimer() {
+    clearInterval(searchTimer);
+    searchTimer = null;
+}
+
+async function cancelSearch() {
+    await leaveRoom();
+    searchInfo.hidden = true;
+    topSection.hidden = false;
+}
+
+async function beginSearch() {
+    searchBtn.disabled = true;
+    searching = true;
+    topSection.hidden = true;
+    roomInfo.hidden = true;
+    searchInfo.hidden = false;
+    showMessage("");
+    startSearchTimer();
+    try {
+        await connect();
+        await connection.invoke("FindOpponent", playerId);
+    } catch {
+        showMessage("Verbindung fehlgeschlagen", "message-fail");
+        await cancelSearch();
+    }
+}
+
+searchBtn.onclick = async () => {
+    if (connection) return;
+    myName = meInput.value.trim() || "Spieler";
+    await beginSearch();
+};
+
+document.getElementById('search-cancel').onclick = cancelSearch;
+
+function resetGameView() {
+    if (chatOpen) closeChat();
+    restoreState([]);
+    p1.textContent = "–";
+    p2.textContent = "–";
+    chatMessages.innerHTML = "";
+    chatOpenBtn.hidden = true;
+    roomInfo.hidden = true;
+    showMessage("");
+}
+
+newOpponentBtn.onclick = async () => {
+    await leaveRoom();
+    resetGameView();
+    await beginSearch();
+};
+
+leaveRoomBtn.onclick = async () => {
+    await leaveRoom();
+    resetGameView();
+    topSection.hidden = false;
+    history.replaceState(null, "", location.pathname);
+};
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) document.title = pageTitle;
+});
 
 document.addEventListener('keydown', (e) => {
     if (chatOpen) {
         if (e.key === "Escape") closeChat();
         return;
     }
-    if (!connection) return;
+    if (!connection || searching) return;
     if (e.target.tagName === "INPUT") return;
     const k = e.key;
     if (/^[a-zA-Z]$/.test(k)) { press(k.toUpperCase()); }
@@ -462,15 +595,18 @@ document.addEventListener('keydown', (e) => {
 });
 
 const savedRoom = sessionStorage.getItem("roomCode");
+const sameIdentity = sessionStorage.getItem("identity") === currentIdentity;
 // reload-check - sonst url-check ( - sonst nix)
-if (savedRoom) {
-    document.getElementById('room').value = savedRoom;
-    document.getElementById('me').value = sessionStorage.getItem("playerName") || "";
-    joinBtn.click();
+if (savedRoom && sameIdentity) {
+    if (!meInput.readOnly) meInput.value = sessionStorage.getItem("playerName") || "";
+    myName = meInput.value.trim() || "Spieler";
+    startRoom(savedRoom, sessionStorage.getItem("randomRoom") === "1");
 } else {
+    sessionStorage.removeItem("roomCode");
+    sessionStorage.removeItem("randomRoom");
     const linkRoom = new URLSearchParams(location.search).get("room");
     if (linkRoom) {
-        document.getElementById('room').value = linkRoom;
-        document.getElementById('me').focus();
+        roomInput.value = linkRoom;
+        meInput.focus();
     }
 }

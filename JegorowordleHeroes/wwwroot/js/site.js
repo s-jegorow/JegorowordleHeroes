@@ -1,5 +1,23 @@
 ﻿const accountOpenBtn = document.getElementById('account-open');
 const accountPanel = document.getElementById('account-panel');
+const accountScore = document.getElementById('account-score');
+const isGuest = accountScore.dataset.guest === "true";
+const GUEST_SCORE_KEY = "guestScore";
+
+function getGuestScore() {
+    return Number(localStorage.getItem(GUEST_SCORE_KEY)) || 0;
+}
+
+function addPoints(points) {
+    if (isGuest) {
+        localStorage.setItem(GUEST_SCORE_KEY, getGuestScore() + points);
+    }
+    accountScore.textContent = Number(accountScore.textContent) + points;
+}
+
+if (isGuest) {
+    accountScore.textContent = getGuestScore();
+}
 
 function openAccount() {
     accountPanel.classList.add('open');

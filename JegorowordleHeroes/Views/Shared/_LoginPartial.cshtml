@@ -24,14 +24,15 @@
         @if (user != null)
         {
             <p>Angemeldet als <strong>@user.UserName</strong></p>
-            <p>Punkte: <strong>@user.Score</strong></p>
+            <p>Punkte: <strong id="account-score">@user.Score</strong></p>
             <form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
                 <button id="logout" type="submit" class="account-button">Ausloggen</button>
             </form>
         }
         else
         {
-            <p>Mit einem Konto sammelst du Punkte für deine Siege.</p>
+            <p>Deine Punkte (nur auf diesem Gerät): <strong id="account-score" data-guest="true">0</strong></p>
+            <p>Mit einem Konto zählen deine Punkte überall und kommen später ins Ranking.</p>
             <a id="login" class="account-button primary" asp-area="Identity" asp-page="/Account/Login">Einloggen</a>
             <a id="register" class="account-button" asp-area="Identity" asp-page="/Account/Register">Registrieren</a>
         }

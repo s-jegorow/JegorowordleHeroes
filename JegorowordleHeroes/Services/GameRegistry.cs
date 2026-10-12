@@ -38,6 +38,24 @@ namespace JegoroWordleHeroes.Services
             return session;
         }
 
+        public string CreateRandomRoomCode()
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            string code;
+            do
+            {
+                var letters = new char[6];
+                for (int i = 0; i < letters.Length; i++)
+                {
+                    letters[i] = chars[Random.Shared.Next(chars.Length)];
+                }
+                code = "Z" + new string(letters);
+            }
+            while (_sessions.ContainsKey(code));
+
+            return code;
+        }
+
         public GameSession? Get(string roomCode)
             => _sessions.TryGetValue(roomCode, out var s) ? s : null;
 

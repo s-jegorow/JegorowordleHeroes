@@ -1,5 +1,6 @@
 ﻿@{
     Layout = "_Layout";
+    var userName = User.Identity?.IsAuthenticated == true ? User.Identity.Name : null;
 }
 <section class="top">
     <div class="mode-switch" role="group" aria-label="Spielart">
@@ -7,17 +8,23 @@
         <button id="mode-random" type="button" aria-pressed="false">Zufallsgegner</button>
     </div>
     <div class="names">
-        <input id="me" maxlength="12" placeholder="Dein Name" aria-label="Dein Name" />
+        <input id="me" maxlength="12" placeholder="Dein Name" aria-label="Dein Name" value="@userName" readonly="@(userName != null)" />
         <input id="room" maxlength="8" placeholder="Session-Code" aria-label="Session-Code" />
         <button id="join">Beitreten</button>
-        <button id="search" type="button" disabled hidden>Gegner suchen</button>
+        <button id="search" type="button" hidden>Gegner suchen</button>
     </div>
+</section>
+
+<section id="search-info" class="search-info" hidden>
+    <span>Suche Gegner … <span id="search-time">0:00</span></span>
+    <button id="search-cancel" type="button">Abbrechen</button>
 </section>
 
 <section class="status">
     <div>Spieler: <span id="p1">–</span> vs <span id="p2">–</span></div>
     <div id="message"></div>
     <button id="rematch" type="button" hidden>Revanche</button>
+    <button id="new-opponent" type="button" hidden>Neuen Gegner suchen</button>
 </section>
 
 <section id="board" class="board" aria-label="Wordle-Felder"></section>
@@ -43,8 +50,11 @@
 </aside>
 
 <div id="room-info" class="room-info" hidden>
-        Raum <strong id="room-label"></strong>
-    <button id="copy-link" type="button">Link kopieren</button>
+    <strong id="room-label"></strong>
+    <div class="room-actions">
+        <button id="copy-link" type="button">Link kopieren</button>
+        <button id="leave-room" type="button">Verlassen</button>
+    </div>
 </div>
 
 

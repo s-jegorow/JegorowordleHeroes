@@ -1,5 +1,7 @@
-﻿using JegoroWordleHeroes.Models;
+﻿using JegoroWordleHeroes.Areas.Identity.Data;
+using JegoroWordleHeroes.Models;
 using JegoroWordleHeroes.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 
 namespace JegoroWordleHeroes.Hubs
@@ -8,19 +10,30 @@ namespace JegoroWordleHeroes.Hubs
     {
         private readonly GameRegistry _registry;
         private readonly WordService _words;
+        private readonly UserManager<JegorowordleHeroesUser> _userManager;
+        private readonly MatchmakingQueue _queue;
         private const int MaxChatLength = 200;
 
         
 
-        public GameHub(GameRegistry registry, WordService words)
+        public GameHub(GameRegistry registry, WordService words, UserManager<JegorowordleHeroesUser> userManager, MatchmakingQueue queue)
         {
             _registry = registry;
             _words = words;
+            _userManager = userManager;
+            _queue = queue;
         }
         
 
         public async Task<string> CreateOrJoin(string roomCode, string playerId, string playerName)
         {
+            var isRegistered = Context.UserIdentifier != null;
+            if (isRegistered)
+            {
+                playerId = Context.UserIdentifier!;
+                playerName = Context.User?.Identity?.Name ?? playerName;
+            }
+
             var session = _registry.GetOrCreate(roomCode, _words.PickWord());
 
             if (session.IsOver && !session.HasPlayer(playerId))
@@ -33,7 +46,7 @@ namespace JegoroWordleHeroes.Hubs
                 session = _registry.StartNew(roomCode, _words.PickWord());
             }
 
-            var player = session.AddOrReconnectPlayer(Context.ConnectionId, playerId, playerName);
+            var player = session.AddOrReconnectPlayer(Context.ConnectionId, playerId, playerName, isRegistered);
 
             if (player is null)
             {
@@ -52,9 +65,23 @@ namespace JegoroWordleHeroes.Hubs
             }
             if (session.IsOver)
             {
-                await Clients.Caller.SendAsync("GameOver", BuildGameOver(session));
+                await Clients.Caller.SendAsync("GameOver", BuildGameOver(session, restored: true));
             }
-            return session.TargetWordMask;
+            return player.Id;
+        }
+
+        public async Task FindOpponent(string playerId)
+        {
+            if (Context.UserIdentifier != null)
+            {
+                playerId = Context.UserIdentifier;
+            }
+
+            var opponent = _queue.TryMatch(new WaitingPlayer(Context.ConnectionId, playerId));
+            if (opponent is null) return;
+
+            var roomCode = _registry.CreateRandomRoomCode();
+            await Clients.Clients(opponent.ConnectionId, Context.ConnectionId).SendAsync("Matched", roomCode);
         }
 
         public async Task SubmitGuess(string roomCode, string guess)
@@ -91,6 +118,10 @@ namespace JegoroWordleHeroes.Hubs
             {
                 session.Winner = player;
                 session.IsOver = true;
+                if (player.IsRegistered)
+                {
+                    await AddScore(player.Id, session.WinnerPoints);
+                }
                 await Clients.Group(roomCode).SendAsync("GameOver", BuildGameOver(session));
                 return;
             }
@@ -130,15 +161,26 @@ namespace JegoroWordleHeroes.Hubs
             await Clients.Group(roomCode).SendAsync("GameReady", 6, 5);
         }
 
-        private static object BuildGameOver(GameSession session)
+        private async Task AddScore(string userId, int points)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null) return;
+
+            user.Score += points;
+            await _userManager.UpdateAsync(user);
+        }
+
+        private static object BuildGameOver(GameSession session, bool restored = false)
         {
             return new
             {
                 WinnerName = session.Winner?.Name,
                 WinnerId = session.Winner?.Id,
                 WinnerGuesses = session.Winner?.Guesses.Count ?? 0,
+                Points = session.WinnerPoints,
                 ByWin = session.Winner != null,
-                TargetWord = session.TargetWord
+                TargetWord = session.TargetWord,
+                Restored = restored
             };
         }
 
@@ -163,6 +205,8 @@ namespace JegoroWordleHeroes.Hubs
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
+            _queue.Remove(Context.ConnectionId);
+
             var session = _registry.RemoveConnection(Context.ConnectionId, out var roomCode, out var playerName);
             if (session != null && roomCode != null)
             {

@@ -85,14 +85,21 @@ a {
     border-color: var(--accent)
 }
 
-.room-info {
+.room-info,
+.search-info {
     display: flex;
     align-items: center;
     gap: 8px
 }
 
-.room-info button {
-     margin-left: auto
+.room-actions,
+.search-info button {
+    margin-left: auto
+}
+
+.room-actions {
+    display: flex;
+    gap: 8px
 }
 
 input {

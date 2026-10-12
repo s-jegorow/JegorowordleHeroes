@@ -33,6 +33,7 @@ builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<WordService>(); 
 builder.Services.AddSingleton<GameRegistry>(); 
+builder.Services.AddSingleton<MatchmakingQueue>();
 
 var app = builder.Build();
 

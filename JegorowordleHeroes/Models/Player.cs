@@ -7,6 +7,7 @@ namespace JegoroWordleHeroes.Models
         public string Id { get; set; } = "";
         public string ConnectionId { get; set; } = "";
         public string Name { get; set; } = "";
+        public bool IsRegistered { get; set; }
         public List<GuessResult> Guesses { get; } = new();
     }
 }

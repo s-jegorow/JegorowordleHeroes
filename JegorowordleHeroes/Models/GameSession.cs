@@ -8,6 +8,7 @@
         public Player? Winner { get; set; }
         public DateTime LastActivity { get; set; } = DateTime.UtcNow;
         public HashSet<string> RematchVotes { get; } = new();
+        private readonly object _playerLock = new();
 
         public Player? PlayerA { get; private set; }
         public Player? PlayerB { get; private set; }
@@ -18,25 +19,28 @@
             TargetWord = targetWord;
         }
 
-        public string TargetWordMask => "*****";
+        public int WinnerPoints => Winner == null ? 0 : 700 - 100 * Winner.Guesses.Count;
 
         public bool IsReady => PlayerA != null && PlayerB != null;
 
-        public Player? AddOrReconnectPlayer(string connectionId, string playerId, string name)
+        public Player? AddOrReconnectPlayer(string connectionId, string playerId, string name, bool isRegistered)
         {
-            if (PlayerA == null || PlayerA.Id == playerId)
+            lock (_playerLock)
             {
-                PlayerA ??= new Player { Id = playerId, Name = name };
-                PlayerA.ConnectionId = connectionId;
-                return PlayerA;
+                if (PlayerA == null || PlayerA.Id == playerId)
+                {
+                    PlayerA ??= new Player { Id = playerId, Name = name, IsRegistered = isRegistered };
+                    PlayerA.ConnectionId = connectionId;
+                    return PlayerA;
+                }
+                if (PlayerB == null || PlayerB.Id == playerId)
+                {
+                    PlayerB ??= new Player { Id = playerId, Name = name, IsRegistered = isRegistered };
+                    PlayerB.ConnectionId = connectionId;
+                    return PlayerB;
+                }
+                return null;
             }
-            if (PlayerB == null || PlayerB.Id == playerId)
-            {
-                PlayerB ??= new Player { Id = playerId, Name = name };
-                PlayerB.ConnectionId = connectionId;
-                return PlayerB;
-            }
-            return null;
         }
 
         public bool HasPlayer(string playerId)
