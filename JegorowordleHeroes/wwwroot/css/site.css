@@ -23,7 +23,12 @@ body.dark {
     font-family: system-ui,Segoe UI,Roboto,Arial
 }
 
+a {
+    color: var(--accent)
+}
+
 .header {
+    position: relative;
     padding: 16px;
     border-bottom: 1px solid #202230;
     text-align: center
@@ -325,7 +330,8 @@ button {
         visibility: visible
     }
 
-.chat-header {
+.chat-header,
+.account-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -420,4 +426,131 @@ button {
     .row.shake {
         animation: none
     }
+}
+
+.account-open {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 8px;
+    line-height: 0
+}
+
+    .account-open svg {
+        width: 22px;
+        height: 22px
+    }
+
+.account-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 20;
+    width: min(300px, 100vw);
+    display: flex;
+    flex-direction: column;
+    background: #11132a;
+    border-right: 1px solid #2a2d4a;
+    text-align: left;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 250ms ease, visibility 250ms
+}
+
+    .account-panel.open {
+        transform: translateX(0);
+        visibility: visible
+    }
+
+.account-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px
+}
+
+    .account-body p {
+        margin: 0
+    }
+
+.account-button {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    background: #1e223a;
+    border: 1px solid #2e3256;
+    border-radius: 6px;
+    color: var(--fg);
+    font: inherit;
+    text-align: center;
+    text-decoration: none
+}
+
+    .account-button:hover {
+        border-color: var(--accent)
+    }
+
+    .account-button.primary {
+        background: #22305a;
+        border-color: var(--accent)
+    }
+
+.auth {
+    max-width: 360px;
+    margin: 24px auto 0
+}
+
+    .auth h1 {
+        margin: 0 0 16px;
+        font-size: 24px
+    }
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px
+}
+
+.auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px
+}
+
+.auth-check {
+    display: flex;
+    align-items: center;
+    gap: 8px
+}
+
+.auth-submit {
+    padding: 10px 12px;
+    background: #22305a;
+    border-color: var(--accent);
+    font-weight: 700
+}
+
+.auth-error {
+    color: #ff6b6b;
+    font-size: 13px
+}
+
+    .auth-error ul {
+        margin: 0;
+        padding-left: 18px
+    }
+
+.validation-summary-valid {
+    display: none
+}
+
+input.input-validation-error {
+    border-color: #ff6b6b
+}
+
+.auth-links {
+    margin: 16px 0 0;
+    color: var(--muted);
+    font-size: 14px
 }

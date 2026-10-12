@@ -1,0 +1,38 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Registrieren";
+}
+
+<section class="auth">
+    <h1>@ViewData["Title"]</h1>
+    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="auth-form">
+        <div asp-validation-summary="ModelOnly" class="auth-error" role="alert"></div>
+        <div class="auth-field">
+            <label asp-for="Input.UserName">Benutzername</label>
+            <input asp-for="Input.UserName" autocomplete="username" maxlength="12" aria-required="true" />
+            <span asp-validation-for="Input.UserName" class="auth-error"></span>
+        </div>
+        <div class="auth-field">
+            <label asp-for="Input.Password">Passwort</label>
+            <input asp-for="Input.Password" autocomplete="new-password" aria-required="true" />
+            <span asp-validation-for="Input.Password" class="auth-error"></span>
+        </div>
+        <div class="auth-field">
+            <label asp-for="Input.ConfirmPassword">Passwort wiederholen</label>
+            <input asp-for="Input.ConfirmPassword" autocomplete="new-password" aria-required="true" />
+            <span asp-validation-for="Input.ConfirmPassword" class="auth-error"></span>
+        </div>
+        <button id="registerSubmit" type="submit" class="auth-submit">Konto anlegen</button>
+    </form>
+    <p class="auth-links">
+        Schon registriert? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Einloggen</a>
+    </p>
+    <p class="auth-links">
+        <a href="~/">Zurück zum Spiel</a>
+    </p>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

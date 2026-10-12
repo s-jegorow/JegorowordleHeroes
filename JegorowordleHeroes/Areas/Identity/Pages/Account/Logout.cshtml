@@ -1,0 +1,24 @@
+﻿@page
+@model LogoutModel
+@{
+    ViewData["Title"] = "Ausloggen";
+}
+
+<section class="auth">
+    <h1>@ViewData["Title"]</h1>
+    @{
+        if (User.Identity?.IsAuthenticated ?? false)
+        {
+            <form class="auth-form" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                <button type="submit" class="auth-submit">Jetzt ausloggen</button>
+            </form>
+        }
+        else
+        {
+            <p>Du bist jetzt ausgeloggt.</p>
+        }
+    }
+    <p class="auth-links">
+        <a href="~/">Zurück zum Spiel</a>
+    </p>
+</section>

@@ -1,4 +1,20 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+﻿const accountOpenBtn = document.getElementById('account-open');
+const accountPanel = document.getElementById('account-panel');
 
-// Write your JavaScript code.
+function openAccount() {
+    accountPanel.classList.add('open');
+    accountOpenBtn.setAttribute('aria-expanded', 'true');
+}
+
+function closeAccount() {
+    accountPanel.classList.remove('open');
+    accountOpenBtn.setAttribute('aria-expanded', 'false');
+    accountOpenBtn.focus();
+}
+
+accountOpenBtn.onclick = openAccount;
+document.getElementById('account-close').onclick = closeAccount;
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === "Escape" && accountPanel.classList.contains('open')) closeAccount();
+});

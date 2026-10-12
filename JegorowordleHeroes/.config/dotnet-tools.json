@@ -3,9 +3,16 @@
   "isRoot": true,
   "tools": {
     "dotnet-ef": {
-      "version": "9.0.9",
+      "version": "9.0.20",
       "commands": [
         "dotnet-ef"
+      ],
+      "rollForward": false
+    },
+    "dotnet-aspnet-codegenerator": {
+      "version": "9.0.12",
+      "commands": [
+        "dotnet-aspnet-codegenerator"
       ],
       "rollForward": false
     }

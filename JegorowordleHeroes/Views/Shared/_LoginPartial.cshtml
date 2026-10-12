@@ -1,0 +1,39 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using JegoroWordleHeroes.Areas.Identity.Data
+
+@inject SignInManager<JegorowordleHeroesUser> SignInManager
+@inject UserManager<JegorowordleHeroesUser> UserManager
+
+@{
+    var user = SignInManager.IsSignedIn(User) ? await UserManager.GetUserAsync(User) : null;
+}
+
+<button id="account-open" type="button" class="account-open" aria-controls="account-panel" aria-expanded="false" aria-label="Konto">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+</button>
+
+<aside id="account-panel" class="account-panel" aria-label="Konto">
+    <div class="account-header">
+        <span>Konto</span>
+        <button id="account-close" type="button" aria-label="Konto schließen">✕</button>
+    </div>
+    <div class="account-body">
+        @if (user != null)
+        {
+            <p>Angemeldet als <strong>@user.UserName</strong></p>
+            <p>Punkte: <strong>@user.Score</strong></p>
+            <form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+                <button id="logout" type="submit" class="account-button">Ausloggen</button>
+            </form>
+        }
+        else
+        {
+            <p>Mit einem Konto sammelst du Punkte für deine Siege.</p>
+            <a id="login" class="account-button primary" asp-area="Identity" asp-page="/Account/Login">Einloggen</a>
+            <a id="register" class="account-button" asp-area="Identity" asp-page="/Account/Register">Registrieren</a>
+        }
+    </div>
+</aside>
