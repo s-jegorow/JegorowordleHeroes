@@ -472,6 +472,15 @@ async function connect() {
         showPreview(name, text);
     });
 
+    connection.on("Joined", (id) => {
+        playerId = id;
+    });
+
+    connection.on("WaitingForOpponent", () => {
+        showMessage("Warte auf deinen Gegner");
+        shakeRow(currentRow);
+    });
+
     connection.on("RestoreState", restoreState);
 
     connection.on("RematchRequested", (name) => {

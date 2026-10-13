@@ -23,6 +23,8 @@
 
         public bool IsReady => PlayerA != null && PlayerB != null;
 
+        public bool HasStarted => (PlayerA?.Guesses.Count ?? 0) + (PlayerB?.Guesses.Count ?? 0) > 0;
+
         public Player? AddOrReconnectPlayer(string connectionId, string playerId, string name, bool isRegistered)
         {
             lock (_playerLock)
@@ -37,6 +39,16 @@
                 {
                     PlayerB ??= new Player { Id = playerId, Name = name, IsRegistered = isRegistered };
                     PlayerB.ConnectionId = connectionId;
+                    return PlayerB;
+                }
+                if (!HasStarted && PlayerA.ConnectionId == "")
+                {
+                    PlayerA = new Player { Id = playerId, Name = name, IsRegistered = isRegistered, ConnectionId = connectionId };
+                    return PlayerA;
+                }
+                if (!HasStarted && PlayerB.ConnectionId == "")
+                {
+                    PlayerB = new Player { Id = playerId, Name = name, IsRegistered = isRegistered, ConnectionId = connectionId };
                     return PlayerB;
                 }
                 return null;

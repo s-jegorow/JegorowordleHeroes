@@ -13,6 +13,7 @@ namespace JegoroWordleHeroes.Hubs
         private readonly UserManager<JegorowordleHeroesUser> _userManager;
         private readonly MatchmakingQueue _queue;
         private const int MaxChatLength = 200;
+        private const int MaxNameLength = 12;
 
         
 
@@ -27,6 +28,10 @@ namespace JegoroWordleHeroes.Hubs
 
         public async Task<string> CreateOrJoin(string roomCode, string playerId, string playerName)
         {
+            playerName = (playerName ?? "").Trim();
+            if (playerName.Length == 0) playerName = "Spieler";
+            if (playerName.Length > MaxNameLength) playerName = playerName.Substring(0, MaxNameLength);
+
             var isRegistered = Context.UserIdentifier != null;
             var avatar = 0;
             if (isRegistered)
@@ -60,6 +65,7 @@ namespace JegoroWordleHeroes.Hubs
 
             player.Avatar = avatar;
 
+            await Clients.Caller.SendAsync("Joined", player.Id);
             await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
             await Clients.Caller.SendAsync("RestoreState", player.Guesses);
             await Clients.Group(roomCode).SendAsync("PlayersUpdated",
@@ -97,6 +103,12 @@ namespace JegoroWordleHeroes.Hubs
 
             var player = session.FindByConnection(Context.ConnectionId);
             if (player is null || session.IsOver) return;
+
+            if (!session.IsReady)
+            {
+                await Clients.Caller.SendAsync("WaitingForOpponent");
+                return;
+            }
 
             guess = (guess ?? "").Trim().ToLower();
 
