@@ -24,6 +24,7 @@ namespace JegorowordleHeroes.Areas.Identity.Pages.Account
         private readonly UserManager<JegorowordleHeroesUser> _userManager;
         private readonly IUserStore<JegorowordleHeroesUser> _userStore;
         private readonly ILogger<RegisterModel> _logger;
+        
 
         public RegisterModel(
             UserManager<JegorowordleHeroesUser> userManager,
@@ -89,6 +90,11 @@ namespace JegorowordleHeroes.Areas.Identity.Pages.Account
             [Display(Name = "Passwort wiederholen")]
             [Compare("Password", ErrorMessage = "Die Passwörter stimmen nicht überein.")]
             public string ConfirmPassword { get; set; }
+
+            // avatar auswahl
+            [Range(1, 12, ErrorMessage = "Bitte wähle eine Figur aus.")]
+            [Display(Name = "Figur")]
+            public int Avatar { get; set; }
         }
 
 
@@ -105,6 +111,7 @@ namespace JegorowordleHeroes.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
+                user.Avatar = Input.Avatar;
 
                 await _userStore.SetUserNameAsync(user, Input.UserName, CancellationToken.None);
                 var result = await _userManager.CreateAsync(user, Input.Password);
@@ -120,6 +127,8 @@ namespace JegorowordleHeroes.Areas.Identity.Pages.Account
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
+
+               
             }
 
             // If we got this far, something failed, redisplay form

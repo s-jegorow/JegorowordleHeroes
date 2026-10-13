@@ -1,7 +1,20 @@
 ﻿const board = document.getElementById('board');
 const keyboardEl = document.getElementById('keyboard');
-const msg = document.getElementById('message');
+const toast = document.getElementById('toast');
+const overlay = document.getElementById('overlay');
+const overlayTitle = document.getElementById('overlay-title');
+const overlaySub = document.getElementById('overlay-sub');
+const overlayExtra = document.getElementById('overlay-extra');
+const duel = document.getElementById('duel');
 const p1 = document.getElementById('p1'), p2 = document.getElementById('p2');
+const slots = [
+    { box: document.getElementById('duel-p1'), name: p1, avatar: document.getElementById('p1-avatar'), info: document.getElementById('p1-info'), id: null },
+    { box: document.getElementById('duel-p2'), name: p2, avatar: document.getElementById('p2-avatar'), info: document.getElementById('p2-info'), id: null }
+];
+const START_OVERLAY_MS = 1500;
+const TOAST_MS = 2500;
+let overlayTimer = null;
+let toastTimer = null;
 
 const letters = "QWERTZUIOPASDFGHJKLYXCVBNM".split("");
 const layout = ["QWERTZUIOP", "ASDFGHJKL", "YXCVBNM"];
@@ -106,8 +119,55 @@ function backspace() {
 }
 
 function showMessage(text, cls) {
-    msg.className = cls || "";
-    msg.textContent = text;
+    clearTimeout(toastTimer);
+    if (!text) {
+        toast.hidden = true;
+        return;
+    }
+    toast.className = "toast " + (cls || "");
+    toast.textContent = text;
+    toast.hidden = false;
+    toastTimer = setTimeout(() => { toast.hidden = true; }, TOAST_MS);
+}
+
+function showOverlay(type, title, sub) {
+    clearTimeout(overlayTimer);
+    overlay.className = "overlay overlay-" + type;
+    overlayTitle.textContent = title;
+    overlaySub.textContent = sub;
+    overlayExtra.replaceChildren();
+    overlay.hidden = false;
+}
+
+function hideOverlay() {
+    clearTimeout(overlayTimer);
+    overlay.hidden = true;
+}
+
+function showStartOverlay() {
+    showOverlay("start", "DUELL!", `${p1.textContent} gegen ${p2.textContent}`);
+    overlayTimer = setTimeout(hideOverlay, START_OVERLAY_MS);
+}
+
+function showPoints(points) {
+    const pill = document.createElement('div');
+    pill.className = "overlay-points";
+    pill.textContent = `+${points} Punkte`;
+    overlayExtra.append(pill);
+}
+
+function showSolution(word) {
+    const label = document.createElement('div');
+    label.className = "overlay-label";
+    label.textContent = "Das Wort war";
+    const tiles = document.createElement('div');
+    tiles.className = "overlay-word";
+    for (const ch of word.toUpperCase()) {
+        const tile = document.createElement('span');
+        tile.textContent = ch;
+        tiles.append(tile);
+    }
+    overlayExtra.append(label, tiles);
 }
 
 async function submit() {
@@ -165,6 +225,11 @@ function restoreState(guesses) {
     board.classList.remove("win", "fail");
     rematchBtn.hidden = true;
     newOpponentBtn.hidden = true;
+    hideOverlay();
+    for (const slot of slots) {
+        slot.box.classList.remove("winner", "loser");
+        if (slot.id) slot.info.textContent = "0/6";
+    }
 
     guesses.forEach((result, r) => {
         grid[r] = result.guess.split("");
@@ -176,6 +241,7 @@ function restoreState(guesses) {
 
     currentRow = guesses.length;
     currentCol = 0;
+    setGuessCount(playerId, guesses.length);
     renderBoard();
     renderKeyboard();
 }
@@ -231,14 +297,39 @@ function hidePreview() {
     chatPreview.classList.remove('visible');
 }
 
-function appendChatMessage(senderId, name, text) {
+function avatarUrl(avatar) {
+    return avatar > 0 ? `/img/avatars/avatar${avatar}.jpg` : "/img/avatars/avatarguest.jpg";
+}
+
+function showPlayer(slot, player) {
+    slot.id = player ? player.id : null;
+    slot.name.textContent = player ? player.name : "wartet …";
+    slot.avatar.src = avatarUrl(player ? player.avatar : 0);
+    slot.info.textContent = player ? `${player.guesses}/6` : "";
+    slot.box.classList.toggle("empty", !player);
+}
+
+function findSlot(id) {
+    return slots.find(slot => slot.id === id);
+}
+
+function setGuessCount(id, count) {
+    const slot = findSlot(id);
+    if (slot) slot.info.textContent = `${count}/6`;
+}
+
+function appendChatMessage(senderId, name, text, avatar) {
     const item = document.createElement('div');
     item.className = "chat-msg";
     if (senderId === playerId) item.classList.add("mine");
 
     const nameEl = document.createElement('span');
     nameEl.className = "chat-name";
-    nameEl.textContent = name;
+    const avatarEl = document.createElement('img');
+    avatarEl.className = "avatar avatar-chat";
+    avatarEl.alt = "";
+    avatarEl.src = avatarUrl(avatar);
+    nameEl.append(avatarEl, name);
 
     const textEl = document.createElement('span');
     textEl.textContent = text;
@@ -354,12 +445,12 @@ async function connect() {
         .build();
 
     connection.on("PlayersUpdated", (a, b) => {
-        p1.textContent = a || "–";
-        p2.textContent = b || "–";
+        showPlayer(slots[0], a);
+        showPlayer(slots[1], b);
     });
 
     connection.on("GameReady", (maxRows, wordLen) => {
-        showMessage("Spiel bereit – viel Erfolg!", "message-success");
+        if (currentRow === 0 && !gameOver) showStartOverlay();
     });
 
     connection.on("InvalidGuess", () => {
@@ -373,8 +464,8 @@ async function connect() {
         showMessage(name + " hat die Verbindung verloren", "message-fail");
     });
 
-    connection.on("ChatMessage", (senderId, name, text) => {
-        appendChatMessage(senderId, name, text);
+    connection.on("ChatMessage", (senderId, name, text, avatar) => {
+        appendChatMessage(senderId, name, text, avatar);
         if (chatOpen || senderId === playerId) return;
         unreadCount++;
         updateBadge();
@@ -408,6 +499,7 @@ async function connect() {
     });
 
     connection.on("GuessAccepted", (res) => {
+        setGuessCount(playerId, currentRow + 1);
         revealDone = applyResult(currentRow, res);
         if (!res.isWin) {
             currentRow++; currentCol = 0;
@@ -416,8 +508,8 @@ async function connect() {
         }
     });
 
-    connection.on("OpponentGuessed", (name, count) => {
-        showMessage(name + " hat Versuch " + count + "/6 abgegeben");
+    connection.on("OpponentGuessed", (name, count, id) => {
+        setGuessCount(id, count);
         appendSystemMessage(name + " hat Versuch " + count + "/6 abgegeben");
     });
 
@@ -427,24 +519,31 @@ async function connect() {
         const { winnerName, winnerId, winnerGuesses, points, byWin, targetWord, restored } = data;
 
         let message = "";
-        let messageClass = "message-fail";
-        
+
         if (byWin) {
+            for (const slot of slots) {
+                slot.box.classList.add(slot.id === winnerId ? "winner" : "loser");
+            }
+
             if (winnerId === playerId) {
                 message = `Gewonnen im ${winnerGuesses}. Versuch! +${points} Punkte`;
-                messageClass = "message-success";
+                showOverlay("win", "Gewonnen!", `im ${winnerGuesses}. Versuch`);
+                showPoints(points);
                 if (!restored) addPoints(points);
                 board.classList.add("win");
             } else {
                 message = `Verloren! ${winnerName} hat es im ${winnerGuesses}. Versuch geschafft. Das Wort war: ${targetWord?.toUpperCase()}`;
+                showOverlay("loss", "Verloren", `${winnerName} hat es im ${winnerGuesses}. Versuch geschafft`);
+                showSolution(targetWord);
                 board.classList.add("fail");
             }
         } else {
             message = `Alle Versuche verbraucht! Das Lösungswort war: ${targetWord?.toUpperCase()}`;
+            showOverlay("draw", "Keiner hat's geschafft", "Alle Versuche verbraucht");
+            showSolution(targetWord);
             board.classList.add("fail");
         }
-        
-        showMessage(message, messageClass);
+
         appendSystemMessage(message);
         showRematchButton();
         newOpponentBtn.hidden = !isRandomRoom;
@@ -467,6 +566,7 @@ async function joinRoom(code, random) {
     stopSearchTimer();
     searchInfo.hidden = true;
     topSection.hidden = true;
+    duel.hidden = false;
     chatOpenBtn.hidden = false;
     roomInfo.hidden = false;
     sessionStorage.setItem("roomCode", roomCode);
@@ -556,8 +656,9 @@ document.getElementById('search-cancel').onclick = cancelSearch;
 function resetGameView() {
     if (chatOpen) closeChat();
     restoreState([]);
-    p1.textContent = "–";
-    p2.textContent = "–";
+    showPlayer(slots[0], null);
+    showPlayer(slots[1], null);
+    duel.hidden = true;
     chatMessages.innerHTML = "";
     chatOpenBtn.hidden = true;
     roomInfo.hidden = true;

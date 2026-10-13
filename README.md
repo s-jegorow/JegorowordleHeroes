@@ -18,11 +18,10 @@ ASP.NET Core 9 (MVC), SignalR, ASP.NET EF Core mit SQLite, ASP.NET Core  Identit
 
 ## Starten
 
-dotnet tool restore
-dotnet ef database update
-dotnet run
+- dotnet tool restore
+- dotnet ef database update
+- dotnet run
 
-dotnet run
 
 ## ToDo
 

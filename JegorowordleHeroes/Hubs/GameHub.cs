@@ -28,10 +28,14 @@ namespace JegoroWordleHeroes.Hubs
         public async Task<string> CreateOrJoin(string roomCode, string playerId, string playerName)
         {
             var isRegistered = Context.UserIdentifier != null;
+            var avatar = 0;
             if (isRegistered)
             {
                 playerId = Context.UserIdentifier!;
                 playerName = Context.User?.Identity?.Name ?? playerName;
+
+                var user = await _userManager.FindByIdAsync(playerId);
+                avatar = user?.Avatar ?? 0;
             }
 
             var session = _registry.GetOrCreate(roomCode, _words.PickWord());
@@ -54,11 +58,12 @@ namespace JegoroWordleHeroes.Hubs
                 return string.Empty;
             }
 
+            player.Avatar = avatar;
+
             await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
             await Clients.Caller.SendAsync("RestoreState", player.Guesses);
             await Clients.Group(roomCode).SendAsync("PlayersUpdated",
-                session.PlayerA?.Name, session.PlayerB?.Name);
-
+                    PlayerInfo(session.PlayerA), PlayerInfo(session.PlayerB));
             if (session.IsReady && !session.IsOver)
             {
                 await Clients.Group(roomCode).SendAsync("GameReady", 6, 5);
@@ -112,7 +117,7 @@ namespace JegoroWordleHeroes.Hubs
 
             await Clients.Caller.SendAsync("GuessAccepted", result);
             await Clients.GroupExcept(roomCode, new[] { Context.ConnectionId })
-                         .SendAsync("OpponentGuessed", player.Name, player.Guesses.Count);
+                         .SendAsync("OpponentGuessed", player.Name, player.Guesses.Count, player.Id);
 
             if (result.IsWin)
             {
@@ -170,6 +175,19 @@ namespace JegoroWordleHeroes.Hubs
             await _userManager.UpdateAsync(user);
         }
 
+        private static object? PlayerInfo(Player? player)
+        {
+            if (player is null) return null;
+
+            return new
+            {
+                player.Id,
+                player.Name,
+                player.Avatar,
+                Guesses = player.Guesses.Count
+            };
+        }
+
         private static object BuildGameOver(GameSession session, bool restored = false)
         {
             return new
@@ -199,8 +217,7 @@ namespace JegoroWordleHeroes.Hubs
                 text = text.Substring(0, MaxChatLength);
             
             session.LastActivity = DateTime.UtcNow;
-            await Clients.Group(roomCode).SendAsync("ChatMessage", player.Id, player.Name, text);
-            
+            await Clients.Group(roomCode).SendAsync("ChatMessage", player.Id, player.Name, text, player.Avatar);            
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)

@@ -23,6 +23,19 @@
             <input asp-for="Input.ConfirmPassword" autocomplete="new-password" aria-required="true" />
             <span asp-validation-for="Input.ConfirmPassword" class="auth-error"></span>
         </div>
+        <fieldset class="avatar-picker">
+    <legend>Figur</legend>
+    <div class="avatar-grid">
+        @for (int i = 1; i <= 12; i++)
+        {
+            <label class="avatar-option">
+                <input type="radio" asp-for="Input.Avatar" value="@i" id="avatar-@i" />
+                <img src="~/img/avatars/avatar@(i).jpg" alt="Figur @i" />
+            </label>
+        }
+    </div>
+    <span asp-validation-for="Input.Avatar" class="auth-error"></span>
+</fieldset>
         <button id="registerSubmit" type="submit" class="auth-submit">Konto anlegen</button>
     </form>
     <p class="auth-links">

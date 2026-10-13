@@ -1,0 +1,35 @@
+﻿@model RankingViewModel
+
+<h3 class="ranking-title">Rangliste</h3>
+
+@if (Model.Top.Count == 0)
+{
+    <p class="ranking-empty">Noch hat niemand Punkte.</p>
+}
+else
+{
+    <ol class="ranking-list">
+        @foreach (var entry in Model.Top)
+        {
+            <li class="@(entry.IsMe ? "me" : null)">
+                <span class="ranking-rank">@entry.Rank.</span>
+                <img class="avatar avatar-small" src="~/img/avatars/avatar@(entry.Avatar).jpg" alt="" />
+                <span class="ranking-name">@entry.UserName</span>
+                <span class="ranking-score">@entry.Score</span>
+            </li>
+        }
+    </ol>
+
+    @if (Model.Me != null)
+    {
+        <p class="ranking-gap">…</p>
+        <ol class="ranking-list">
+            <li class="me">
+                <span class="ranking-rank">@Model.Me.Rank.</span>
+                <img class="avatar avatar-small" src="~/img/avatars/avatar@(Model.Me.Avatar).jpg" alt="" />
+                <span class="ranking-name">@Model.Me.UserName</span>
+                <span class="ranking-score">@Model.Me.Score</span>
+            </li>
+        </ol>
+    }
+}

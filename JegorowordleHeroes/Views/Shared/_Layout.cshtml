@@ -8,8 +8,15 @@
 </head>
 <body class="dark">
     <header class="header">
-        <img src="~/jegorowordleheroes.png" height="150"/>
-        <partial name="_LoginPartial" />
+        <div class="header-bar">
+            <div class="header-side">
+                @RenderSection("HeaderLeft", required: false)
+            </div>
+            <img class="header-logo" src="~/jegorowordleheroes.png" alt="Jegorowordle Heroes" />
+            <div class="header-side header-side-right">
+                <partial name="_LoginPartial" />
+            </div>
+        </div>
     </header>
     <main class="container">
         @RenderBody()

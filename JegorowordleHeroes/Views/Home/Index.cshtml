@@ -20,22 +20,45 @@
     <button id="search-cancel" type="button">Abbrechen</button>
 </section>
 
-<section class="status">
-    <div>Spieler: <span id="p1">–</span> vs <span id="p2">–</span></div>
-    <div id="message"></div>
-    <button id="rematch" type="button" hidden>Revanche</button>
-    <button id="new-opponent" type="button" hidden>Neuen Gegner suchen</button>
+<section id="duel" class="duel" aria-label="Duell" hidden>
+    <div id="duel-p1" class="duel-player empty">
+        <img id="p1-avatar" class="duel-avatar" src="~/img/avatars/avatarguest.jpg" alt="" />
+        <strong id="p1">wartet …</strong>
+        <span id="p1-info" class="duel-info"></span>
+    </div>
+    <div class="duel-vs">VS</div>
+    <div id="duel-p2" class="duel-player empty">
+        <img id="p2-avatar" class="duel-avatar" src="~/img/avatars/avatarguest.jpg" alt="" />
+        <strong id="p2">wartet …</strong>
+        <span id="p2-info" class="duel-info"></span>
+    </div>
 </section>
 
-<section id="board" class="board" aria-label="Wordle-Felder"></section>
+<div class="board-wrap">
+    <section id="board" class="board" aria-label="Wordle-Felder"></section>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <div id="overlay" class="overlay" hidden>
+        <div id="overlay-title" class="overlay-title"></div>
+        <div id="overlay-sub" class="overlay-sub"></div>
+        <div id="overlay-extra"></div>
+        <div class="overlay-actions">
+            <button id="rematch" type="button" hidden>Revanche</button>
+            <button id="new-opponent" type="button" hidden>Neuer Gegner</button>
+        </div>
+    </div>
+</div>
 
 <section class="keyboard" id="keyboard"></section>
 
-<button id="chat-open" class="chat-open" type="button" aria-controls="chat-panel" aria-expanded="false" hidden>
-    Chat <span id="chat-badge" class="chat-badge" hidden>0</span>
-</button>
-
-<div id="chat-preview" class="chat-preview" aria-hidden="true"></div>
+@section HeaderLeft {
+    <button id="chat-open" class="header-button" type="button" aria-controls="chat-panel" aria-expanded="false" aria-label="Chat" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <span id="chat-badge" class="chat-badge" hidden>0</span>
+    </button>
+    <div id="chat-preview" class="chat-preview" aria-hidden="true"></div>
+}
 
 <aside id="chat-panel" class="chat-panel" aria-label="Chat">
     <div class="chat-header">

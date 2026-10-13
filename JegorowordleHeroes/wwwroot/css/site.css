@@ -28,16 +28,49 @@ a {
 }
 
 .header {
-    position: relative;
     padding: 16px;
-    border-bottom: 1px solid #202230;
-    text-align: center
+    border-bottom: 1px solid #202230
 }
 
-    .header img {
-        max-width: 100%;
-        max-height: 150px;
-        height: auto
+.header-bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+    max-width: 500px;
+    margin: 0 auto
+}
+
+.header-side {
+    position: relative;
+    display: flex
+}
+
+.header-side-right {
+    justify-content: flex-end
+}
+
+.header-logo {
+    display: block;
+    max-width: 100%;
+    max-height: 150px;
+    height: auto
+}
+
+.header-button {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%
+}
+
+    .header-button svg {
+        width: 22px;
+        height: 22px
     }
 
 .container {
@@ -123,20 +156,16 @@ button {
         border-color: var(--accent)
     }
 
-.status {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 4px 16px;
-    margin: 8px 0
+.board-wrap {
+    position: relative;
+    width: min(330px, 100%, 40vh);
+    margin: 12px auto
 }
 
 .board {
     display: grid;
     grid-template-rows: repeat(6,1fr);
-    gap: 6px;
-    width: min(330px, 100%, 40vh);
-    margin: 12px auto
+    gap: 6px
 }
 
 .row {
@@ -261,27 +290,10 @@ button {
     }
 }
 
-.message-success {
-    color: var(--ok)
-}
-
-.message-fail {
-    color: #ff6b6b
-}
-
-.chat-open {
-    position: fixed;
-    right: 16px;
-    bottom: 16px;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border-radius: 999px
-}
-
 .chat-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
     min-width: 20px;
     padding: 0 6px;
     border-radius: 999px;
@@ -293,9 +305,9 @@ button {
 }
 
 .chat-preview {
-    position: fixed;
-    right: 16px;
-    bottom: 68px;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
     z-index: 10;
     max-width: min(280px, calc(100vw - 32px));
     padding: 8px 12px;
@@ -319,15 +331,16 @@ button {
 .chat-panel {
     position: fixed;
     top: 0;
-    right: 0;
+    left: 0;
     bottom: 0;
     z-index: 20;
     width: min(320px, 100vw);
     display: flex;
     flex-direction: column;
     background: #11132a;
-    border-left: 1px solid #2a2d4a;
-    transform: translateX(100%);
+    border-right: 1px solid #2a2d4a;
+    text-align: left;
+    transform: translateX(-100%);
     visibility: hidden;
     transition: transform 250ms ease, visibility 250ms
 }
@@ -372,7 +385,9 @@ button {
     }
 
 .chat-name {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 12px;
     color: var(--muted)
 }
@@ -401,7 +416,7 @@ button {
         padding: 8px
     }
 
-        .header img {
+        .header-logo {
             max-height: 56px
         }
 }
@@ -430,37 +445,26 @@ button {
 
 @media (prefers-reduced-motion: reduce) {
     .cell.flip,
-    .row.shake {
+    .row.shake,
+    .overlay,
+    .toast {
         animation: none
     }
 }
 
-.account-open {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    padding: 8px;
-    line-height: 0
-}
-
-    .account-open svg {
-        width: 22px;
-        height: 22px
-    }
-
 .account-panel {
     position: fixed;
     top: 0;
-    left: 0;
+    right: 0;
     bottom: 0;
     z-index: 20;
     width: min(300px, 100vw);
     display: flex;
     flex-direction: column;
     background: #11132a;
-    border-right: 1px solid #2a2d4a;
+    border-left: 1px solid #2a2d4a;
     text-align: left;
-    transform: translateX(-100%);
+    transform: translateX(100%);
     visibility: hidden;
     transition: transform 250ms ease, visibility 250ms
 }
@@ -471,6 +475,9 @@ button {
     }
 
 .account-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -560,4 +567,350 @@ input.input-validation-error {
     margin: 16px 0 0;
     color: var(--muted);
     font-size: 14px
+}
+
+.ranking {
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid #202230
+}
+
+.ranking-title {
+    margin: 0 0 8px;
+    font-size: 16px
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none
+}
+
+    .ranking-list li {
+        display: flex;
+        gap: 8px;
+        padding: 6px 8px;
+        background: #1b1e33;
+        border: 1px solid transparent;
+        border-radius: 6px
+    }
+
+        .ranking-list li.me {
+            background: #22305a;
+            border-color: var(--accent)
+        }
+
+.ranking-rank {
+    width: 2.5em;
+    color: var(--muted)
+}
+
+.ranking-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap
+}
+
+.ranking-score {
+    font-weight: 700
+}
+
+.ranking-gap,
+.ranking-empty {
+    color: var(--muted);
+    text-align: center
+}
+.avatar-picker {
+    margin: 0;
+    padding: 0;
+    border: 0
+}
+
+    .avatar-picker legend {
+        margin-bottom: 4px;
+        padding: 0
+    }
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px
+}
+
+.avatar-option {
+    position: relative;
+    cursor: pointer
+}
+
+    .avatar-option input {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px
+    }
+
+    .avatar-option img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border: 2px solid #2a2d4a;
+        border-radius: 8px
+    }
+
+    .avatar-option input:checked + img {
+        border-color: var(--accent)
+    }
+
+    .avatar-option input:focus-visible + img {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px
+    }
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #1b1e33
+}
+
+.avatar-small {
+    width: 24px;
+    height: 24px
+}
+
+.avatar-chat {
+    width: 20px;
+    height: 20px
+}
+
+.account-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px
+}
+
+.duel {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 8px
+}
+
+.duel-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    transition: opacity 200ms ease
+}
+
+    .duel-player strong {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 15px
+    }
+
+    .duel-player.empty .duel-avatar {
+        opacity: 0.35
+    }
+
+    .duel-player.empty strong {
+        color: var(--muted);
+        font-weight: 400
+    }
+
+    .duel-player.winner .duel-avatar {
+        border-color: #f2c94c;
+        box-shadow: 0 0 18px rgba(242, 201, 76, 0.55)
+    }
+
+    .duel-player.loser {
+        opacity: 0.6
+    }
+
+.duel-avatar {
+    width: 88px;
+    height: 88px;
+    border: 3px solid #2a2d4a;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #1b1e33
+}
+
+.duel-info {
+    min-height: 1.2em;
+    font-size: 12px;
+    color: var(--muted)
+}
+
+.duel-vs {
+    padding: 0 12px;
+    font-size: 26px;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: 1px;
+    color: #f2c94c
+}
+
+.overlay {
+    position: absolute;
+    inset: -6px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    text-align: center;
+    background: rgba(11, 12, 23, 0.8);
+    border-radius: 12px;
+    animation: popIn 250ms ease
+}
+
+.overlay-title {
+    font-size: 48px;
+    font-weight: 900;
+    line-height: 1.1
+}
+
+.overlay-start .overlay-title {
+    font-size: 60px;
+    letter-spacing: 2px;
+    color: #f2c94c;
+    text-shadow: 0 4px 24px rgba(242, 201, 76, 0.35)
+}
+
+.overlay-win .overlay-title {
+    color: #7bd77a
+}
+
+.overlay-loss .overlay-title {
+    color: #ff6b6b
+}
+
+.overlay-draw .overlay-title {
+    font-size: 32px
+}
+
+.overlay-sub {
+    font-size: 16px;
+    color: #c9ccd3
+}
+
+.overlay-points {
+    padding: 6px 16px;
+    font-size: 20px;
+    font-weight: 800;
+    color: #f2c94c;
+    background: rgba(242, 201, 76, 0.12);
+    border: 1px solid #f2c94c;
+    border-radius: 999px
+}
+
+.overlay-label {
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--muted)
+}
+
+.overlay-word {
+    display: flex;
+    gap: 5px
+}
+
+    .overlay-word span {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 800;
+        color: #fff;
+        background: var(--ok);
+        border-radius: 6px
+    }
+
+.overlay-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px
+}
+
+    .overlay-actions button {
+        padding: 10px 14px;
+        font-size: 14px
+    }
+
+#rematch {
+    background: #22305a;
+    border-color: var(--accent);
+    font-weight: 700
+}
+
+.toast {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    z-index: 6;
+    max-width: 90%;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    background: #1e223a;
+    border: 1px solid #2e3256;
+    border-radius: 999px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    transform: translateX(-50%);
+    animation: fadeIn 200ms ease
+}
+
+    .toast.message-fail {
+        color: #ffc2c2;
+        background: #3a1d26;
+        border-color: #ff6b6b
+    }
+
+    .toast.message-success {
+        color: #c8f0c5;
+        background: #1d3a24;
+        border-color: var(--ok)
+    }
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96)
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1)
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0
+    }
+
+    to {
+        opacity: 1
+    }
 }

@@ -8,7 +8,7 @@
     var user = SignInManager.IsSignedIn(User) ? await UserManager.GetUserAsync(User) : null;
 }
 
-<button id="account-open" type="button" class="account-open" aria-controls="account-panel" aria-expanded="false" aria-label="Konto">
+<button id="account-open" type="button" class="header-button" aria-controls="account-panel" aria-expanded="false" aria-label="Konto">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="8" r="4" />
         <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
@@ -23,7 +23,10 @@
     <div class="account-body">
         @if (user != null)
         {
-            <p>Angemeldet als <strong>@user.UserName</strong></p>
+            <div class="account-profile">
+                <img class="avatar" src="~/img/avatars/avatar@(user.Avatar).jpg" alt="" />
+                <p>Angemeldet als <strong>@user.UserName</strong></p>
+            </div>
             <p>Punkte: <strong id="account-score">@user.Score</strong></p>
             <form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
                 <button id="logout" type="submit" class="account-button">Ausloggen</button>
@@ -31,10 +34,15 @@
         }
         else
         {
+            <div class="account-profile">
+                <img class="avatar" src="~/img/avatars/avatarguest.jpg" alt="" />
+                <p>Du spielst als Gast</p>
+            </div>
             <p>Deine Punkte (nur auf diesem Gerät): <strong id="account-score" data-guest="true">0</strong></p>
-            <p>Mit einem Konto zählen deine Punkte überall und kommen später ins Ranking.</p>
+            <p>Mit einem Konto zählen deine Punkte überall und kommen ins Ranking.</p>
             <a id="login" class="account-button primary" asp-area="Identity" asp-page="/Account/Login">Einloggen</a>
             <a id="register" class="account-button" asp-area="Identity" asp-page="/Account/Register">Registrieren</a>
         }
+        <section id="ranking" class="ranking" aria-live="polite"></section>
     </div>
 </aside>
