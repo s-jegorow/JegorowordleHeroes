@@ -71,7 +71,7 @@ function renderKeyboard() {
         row.className = "key-row";
 
         if (idx === 1) row.appendChild(createSpacer());
-        if (idx === 2) row.appendChild(createKey("ENTER", submit, "wide"));
+        if (idx === 2) row.appendChild(createKey("↵", submit, "wide"));
 
         rowLetters.split("").forEach(ch => {
             const k = createKey(ch, () => press(ch));

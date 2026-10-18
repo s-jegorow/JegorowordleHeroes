@@ -92,6 +92,7 @@ a {
 
     .mode-switch button {
         padding: 6px 8px;
+        white-space: nowrap;
         background: transparent;
         border-color: transparent;
         color: var(--muted)
