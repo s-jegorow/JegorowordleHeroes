@@ -81,7 +81,7 @@ a {
 
 .mode-switch {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 3px;
     padding: 3px;
     margin-bottom: 8px;
@@ -705,6 +705,15 @@ input.input-validation-error {
     margin: 4px 0 8px
 }
 
+.duel.solo {
+    grid-template-columns: 1fr
+}
+
+    .duel.solo .duel-vs,
+    .duel.solo #duel-p2 {
+        display: none
+    }
+
 .duel-player {
     display: flex;
     flex-direction: column;
@@ -722,11 +731,13 @@ input.input-validation-error {
         font-size: 15px
     }
 
-    .duel-player.empty .duel-avatar {
+    .duel-player.empty .duel-avatar,
+    .duel-player.offline .duel-avatar {
         opacity: 0.35
     }
 
-    .duel-player.empty strong {
+    .duel-player.empty strong,
+    .duel-player.offline strong {
         color: var(--muted);
         font-weight: 400
     }

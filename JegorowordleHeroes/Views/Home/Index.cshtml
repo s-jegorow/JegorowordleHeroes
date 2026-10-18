@@ -6,12 +6,14 @@
     <div class="mode-switch" role="group" aria-label="Spielart">
         <button id="mode-friend" type="button" class="active" aria-pressed="true">Mit Freund</button>
         <button id="mode-random" type="button" aria-pressed="false">Zufallsgegner</button>
+        <button id="mode-solo" type="button" aria-pressed="false">Solo</button>
     </div>
     <div class="names">
         <input id="me" maxlength="12" placeholder="Dein Name" aria-label="Dein Name" value="@userName" readonly="@(userName != null)" />
         <input id="room" maxlength="8" placeholder="Session-Code" aria-label="Session-Code" />
         <button id="join">Beitreten</button>
         <button id="search" type="button" hidden>Gegner suchen</button>
+        <button id="solo" type="button" hidden>Starten</button>
     </div>
 </section>
 

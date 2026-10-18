@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 
-namespace JegorowordleHeroes.Areas.Identity.Pages.Account
+namespace JegoroWordleHeroes.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {

@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 
-namespace JegorowordleHeroes.Areas.Identity.Pages.Account
+namespace JegoroWordleHeroes.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
@@ -109,9 +109,7 @@ namespace JegorowordleHeroes.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
@@ -124,7 +122,8 @@ namespace JegorowordleHeroes.Areas.Identity.Pages.Account
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
+                    ModelState.AddModelError(string.Empty, "Zu viele Fehlversuche. Versuch es in ein paar Minuten nochmal.");
+                    return Page();
                 }
                 else
                 {

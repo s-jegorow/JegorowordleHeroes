@@ -13,7 +13,7 @@ else
         {
             <li class="@(entry.IsMe ? "me" : null)">
                 <span class="ranking-rank">@entry.Rank.</span>
-                <img class="avatar avatar-small" src="~/img/avatars/avatar@(entry.Avatar).jpg" alt="" />
+                <img class="avatar avatar-small" src="~/img/avatars/@(entry.Avatar > 0 ? $"avatar{entry.Avatar}" : "avatarguest").jpg" alt="" />
                 <span class="ranking-name">@entry.UserName</span>
                 <span class="ranking-score">@entry.Score</span>
             </li>
@@ -26,7 +26,7 @@ else
         <ol class="ranking-list">
             <li class="me">
                 <span class="ranking-rank">@Model.Me.Rank.</span>
-                <img class="avatar avatar-small" src="~/img/avatars/avatar@(Model.Me.Avatar).jpg" alt="" />
+                <img class="avatar avatar-small" src="~/img/avatars/@(Model.Me.Avatar > 0 ? $"avatar{Model.Me.Avatar}" : "avatarguest").jpg" alt="" />
                 <span class="ranking-name">@Model.Me.UserName</span>
                 <span class="ranking-score">@Model.Me.Score</span>
             </li>

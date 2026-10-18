@@ -28,6 +28,7 @@ let grid = Array.from({ length: 6 }, () => Array(5).fill(""));
 let connection = null;
 let roomCode = "", myName = "";
 let playerId = loadPlayerId();
+let myId = null;
 let gameOver = false;
 let completedRows = [];
 let inputLocked = false;
@@ -92,6 +93,8 @@ function createKey(label, onClick, extraClass) {
     if (extraClass) k.classList.add(extraClass);
     k.textContent = label;
     k.onclick = onClick;
+    // tasten nicht fokussieren, sonst tippt leertaste den letzten buchstaben nochmal
+    k.onmousedown = (e) => e.preventDefault();
     return k;
 }
 
@@ -145,7 +148,8 @@ function hideOverlay() {
 }
 
 function showStartOverlay() {
-    showOverlay("start", "DUELL!", `${p1.textContent} gegen ${p2.textContent}`);
+    if (roomMode === "solo") showOverlay("start", "LOS!", "Übungsmodus, ohne Punkte");
+    else showOverlay("start", "DUELL!", `${p1.textContent} gegen ${p2.textContent}`);
     overlayTimer = setTimeout(hideOverlay, START_OVERLAY_MS);
 }
 
@@ -241,7 +245,7 @@ function restoreState(guesses) {
 
     currentRow = guesses.length;
     currentCol = 0;
-    setGuessCount(playerId, guesses.length);
+    setGuessCount(myId, guesses.length);
     renderBoard();
     renderKeyboard();
 }
@@ -307,6 +311,7 @@ function showPlayer(slot, player) {
     slot.avatar.src = avatarUrl(player ? player.avatar : 0);
     slot.info.textContent = player ? `${player.guesses}/6` : "";
     slot.box.classList.toggle("empty", !player);
+    slot.box.classList.toggle("offline", !!player && !player.connected);
 }
 
 function findSlot(id) {
@@ -321,7 +326,7 @@ function setGuessCount(id, count) {
 function appendChatMessage(senderId, name, text, avatar) {
     const item = document.createElement('div');
     item.className = "chat-msg";
-    if (senderId === playerId) item.classList.add("mine");
+    if (senderId === myId) item.classList.add("mine");
 
     const nameEl = document.createElement('span');
     nameEl.className = "chat-name";
@@ -370,6 +375,8 @@ const searchBtn = document.getElementById('search');
 const roomInput = document.getElementById('room');
 const modeFriendBtn = document.getElementById('mode-friend');
 const modeRandomBtn = document.getElementById('mode-random');
+const modeSoloBtn = document.getElementById('mode-solo');
+const soloBtn = document.getElementById('solo');
 const rematchBtn = document.getElementById('rematch');
 const newOpponentBtn = document.getElementById('new-opponent');
 const meInput = document.getElementById('me');
@@ -384,31 +391,33 @@ const currentIdentity = meInput.readOnly ? meInput.value : "";
 const pageTitle = document.title;
 let searching = false;
 let searchTimer = null;
-let isRandomRoom = false;
+let roomMode = "friend";
 
-function setMode(random) {
-    modeFriendBtn.classList.toggle('active', !random);
-    modeRandomBtn.classList.toggle('active', random);
-    modeFriendBtn.setAttribute('aria-pressed', String(!random));
-    modeRandomBtn.setAttribute('aria-pressed', String(random));
-    roomInput.hidden = random;
-    joinBtn.hidden = random;
-    searchBtn.hidden = !random;
+function setMode(mode) {
+    for (const [btn, m] of [[modeFriendBtn, "friend"], [modeRandomBtn, "random"], [modeSoloBtn, "solo"]]) {
+        btn.classList.toggle('active', mode === m);
+        btn.setAttribute('aria-pressed', String(mode === m));
+    }
+    roomInput.hidden = mode !== "friend";
+    joinBtn.hidden = mode !== "friend";
+    searchBtn.hidden = mode !== "random";
+    soloBtn.hidden = mode !== "solo";
 }
 
-modeFriendBtn.onclick = () => setMode(false);
-modeRandomBtn.onclick = () => setMode(true);
+modeFriendBtn.onclick = () => setMode("friend");
+modeRandomBtn.onclick = () => setMode("random");
+modeSoloBtn.onclick = () => setMode("solo");
 
 function showRematchButton() {
     rematchBtn.hidden = false;
     rematchBtn.disabled = false;
-    rematchBtn.textContent = "Revanche";
+    rematchBtn.textContent = roomMode === "solo" ? "Nochmal" : "Revanche";
     rematchBtn.classList.remove("rematch-requested");
 }
 
 rematchBtn.onclick = async () => {
     rematchBtn.disabled = true;
-    rematchBtn.textContent = "Warte auf Gegner …";
+    if (roomMode !== "solo") rematchBtn.textContent = "Warte auf Gegner …";
     try {
         await connection.invoke("RequestRematch", roomCode);
     } catch {
@@ -434,8 +443,9 @@ async function leaveRoom() {
     connection = null;
     joinBtn.disabled = false;
     searchBtn.disabled = false;
+    soloBtn.disabled = false;
     sessionStorage.removeItem("roomCode");
-    sessionStorage.removeItem("randomRoom");
+    sessionStorage.removeItem("roomMode");
 }
 
 async function connect() {
@@ -466,14 +476,14 @@ async function connect() {
 
     connection.on("ChatMessage", (senderId, name, text, avatar) => {
         appendChatMessage(senderId, name, text, avatar);
-        if (chatOpen || senderId === playerId) return;
+        if (chatOpen || senderId === myId) return;
         unreadCount++;
         updateBadge();
         showPreview(name, text);
     });
 
     connection.on("Joined", (id) => {
-        playerId = id;
+        myId = id;
     });
 
     connection.on("WaitingForOpponent", () => {
@@ -496,19 +506,19 @@ async function connect() {
 
     connection.on("Matched", (code) => {
         if (document.hidden) document.title = "Gegner gefunden!";
-        joinRoom(code, true).catch(() => showMessage("Verbindung fehlgeschlagen", "message-fail"));
+        joinRoom(code, "random").catch(() => showMessage("Verbindung fehlgeschlagen", "message-fail"));
     });
 
     connection.onreconnected(async () => {
         if (searching) {
             await connection.invoke("FindOpponent", playerId);
         } else {
-            await connection.invoke("CreateOrJoin", roomCode, playerId, myName);
+            await connection.invoke("CreateOrJoin", roomCode, playerId, myName, roomMode === "solo");
         }
     });
 
     connection.on("GuessAccepted", (res) => {
-        setGuessCount(playerId, currentRow + 1);
+        setGuessCount(myId, currentRow + 1);
         revealDone = applyResult(currentRow, res);
         if (!res.isWin) {
             currentRow++; currentCol = 0;
@@ -534,7 +544,11 @@ async function connect() {
                 slot.box.classList.add(slot.id === winnerId ? "winner" : "loser");
             }
 
-            if (winnerId === playerId) {
+            if (winnerId === myId && roomMode === "solo") {
+                message = `Geschafft im ${winnerGuesses}. Versuch!`;
+                showOverlay("win", "Geschafft!", `im ${winnerGuesses}. Versuch`);
+                board.classList.add("win");
+            } else if (winnerId === myId) {
                 message = `Gewonnen im ${winnerGuesses}. Versuch! +${points} Punkte`;
                 showOverlay("win", "Gewonnen!", `im ${winnerGuesses}. Versuch`);
                 showPoints(points);
@@ -555,51 +569,54 @@ async function connect() {
 
         appendSystemMessage(message);
         showRematchButton();
-        newOpponentBtn.hidden = !isRandomRoom;
+        newOpponentBtn.hidden = roomMode !== "random";
     });
 
     await connection.start();
 }
 
-async function joinRoom(code, random) {
+async function joinRoom(code, mode) {
     roomCode = code;
-    const joinedId = await connection.invoke("CreateOrJoin", roomCode, playerId, myName);
+    roomMode = mode;
+    const joinedId = await connection.invoke("CreateOrJoin", roomCode, playerId, myName, mode === "solo");
     if (!joinedId) {
         await leaveRoom();
         return;
     }
 
-    playerId = joinedId;
-    isRandomRoom = random;
+    myId = joinedId;
     searching = false;
     stopSearchTimer();
     searchInfo.hidden = true;
     topSection.hidden = true;
     duel.hidden = false;
-    chatOpenBtn.hidden = false;
+    chatOpenBtn.hidden = mode === "solo";
+    duel.classList.toggle("solo", mode === "solo");
     roomInfo.hidden = false;
     sessionStorage.setItem("roomCode", roomCode);
     sessionStorage.setItem("playerName", myName);
     sessionStorage.setItem("identity", currentIdentity);
 
-    if (random) {
-        sessionStorage.setItem("randomRoom", "1");
-        roomLabel.textContent = "Zufallsspiel";
+    sessionStorage.setItem("roomMode", mode);
+
+    if (mode === "random" || mode === "solo") {
+        roomLabel.textContent = mode === "solo" ? "Übungsmodus" : "Zufallsspiel";
         copyLinkBtn.hidden = true;
         history.replaceState(null, "", location.pathname);
     } else {
-        sessionStorage.removeItem("randomRoom");
         roomLabel.textContent = "Raum " + roomCode;
         copyLinkBtn.hidden = false;
         history.replaceState(null, "", "?room=" + encodeURIComponent(roomCode));
     }
 }
 
-async function startRoom(code, random) {
+async function startRoom(code, mode) {
     joinBtn.disabled = true;
+    soloBtn.disabled = true;
     try {
         await connect();
-        await joinRoom(code, random);
+        if (mode === "solo" && !code) code = await connection.invoke("CreateSoloRoom");
+        await joinRoom(code, mode);
     } catch {
         showMessage("Verbindung fehlgeschlagen", "message-fail");
         await leaveRoom();
@@ -613,7 +630,7 @@ joinBtn.onclick = async () => {
 
     if (!code) { showMessage("Bitte Session-Code angeben", "message-fail"); return; }
 
-    await startRoom(code, false);
+    await startRoom(code, "friend");
 };
 
 function startSearchTimer() {
@@ -661,6 +678,12 @@ searchBtn.onclick = async () => {
 };
 
 document.getElementById('search-cancel').onclick = cancelSearch;
+
+soloBtn.onclick = async () => {
+    if (connection) return;
+    myName = meInput.value.trim() || "Spieler";
+    await startRoom(null, "solo");
+};
 
 function resetGameView() {
     if (chatOpen) closeChat();
@@ -710,10 +733,10 @@ const sameIdentity = sessionStorage.getItem("identity") === currentIdentity;
 if (savedRoom && sameIdentity) {
     if (!meInput.readOnly) meInput.value = sessionStorage.getItem("playerName") || "";
     myName = meInput.value.trim() || "Spieler";
-    startRoom(savedRoom, sessionStorage.getItem("randomRoom") === "1");
+    startRoom(savedRoom, sessionStorage.getItem("roomMode") || "friend");
 } else {
     sessionStorage.removeItem("roomCode");
-    sessionStorage.removeItem("randomRoom");
+    sessionStorage.removeItem("roomMode");
     const linkRoom = new URLSearchParams(location.search).get("room");
     if (linkRoom) {
         roomInput.value = linkRoom;

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35913.81 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JegorowordleHeroes", "JegorowordleHeroes\JegorowordleHeroes.csproj", "{DD104300-A4B9-478D-8EA7-D217502F363D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JegorowordleHeroes.Tests", "JegorowordleHeroes.Tests\JegorowordleHeroes.Tests.csproj", "{170A6230-70E9-4123-A1F0-E750F00AC79A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{DD104300-A4B9-478D-8EA7-D217502F363D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD104300-A4B9-478D-8EA7-D217502F363D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD104300-A4B9-478D-8EA7-D217502F363D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{170A6230-70E9-4123-A1F0-E750F00AC79A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{170A6230-70E9-4123-A1F0-E750F00AC79A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{170A6230-70E9-4123-A1F0-E750F00AC79A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{170A6230-70E9-4123-A1F0-E750F00AC79A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

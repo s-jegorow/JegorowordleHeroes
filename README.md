@@ -15,6 +15,7 @@ ASP.NET Core 9 (MVC), SignalR, ASP.NET EF Core mit SQLite, ASP.NET Core  Identit
 - Reconnect und Reload ohne Spielverlust
 - Responsives Layout
 - Login via ASP.NET Core Identity 
+- Solo-Modus zum Üben (keine Punkte)
 
 ## Starten
 
@@ -22,10 +23,3 @@ ASP.NET Core 9 (MVC), SignalR, ASP.NET EF Core mit SQLite, ASP.NET Core  Identit
 - dotnet ef database update
 - dotnet run
 
-
-## ToDo
-
-- Optisches Tuning
-- Avatare
-- UX-Verbesserungen
-- Spectator-Modus

@@ -21,19 +21,19 @@ namespace JegoroWordleHeroes.Services
             var cutoff = DateTime.UtcNow.AddMinutes(-30);
             foreach (var kv in _sessions)
             {
-                if (kv.Value.LastActivity < cutoff)
+                if (!kv.Value.HasConnectedPlayers && kv.Value.LastActivity < cutoff)
                 {
                     _sessions.TryRemove(kv.Key, out _);
                 }
             }
         }
 
-        public GameSession GetOrCreate(string roomCode, string targetWord)
-            => _sessions.GetOrAdd(roomCode, _ => new GameSession(roomCode, targetWord));
+        public GameSession GetOrCreate(string roomCode, string targetWord, bool isSolo)
+            => _sessions.GetOrAdd(roomCode, _ => new GameSession(roomCode, targetWord, isSolo));
 
-        public GameSession StartNew(string roomCode, string targetWord)
+        public GameSession StartNew(string roomCode, string targetWord, bool isSolo)
         {
-            var session = new GameSession(roomCode, targetWord);
+            var session = new GameSession(roomCode, targetWord, isSolo);
             _sessions[roomCode] = session;
             return session;
         }
@@ -71,6 +71,7 @@ namespace JegoroWordleHeroes.Services
                 {
                     var player = isA ? s.PlayerA! : s.PlayerB!;
                     player.ConnectionId = "";
+                    s.LastActivity = DateTime.UtcNow;
                     playerName = player.Name;
 
                     roomCode = kv.Key;

@@ -24,7 +24,7 @@
         @if (user != null)
         {
             <div class="account-profile">
-                <img class="avatar" src="~/img/avatars/avatar@(user.Avatar).jpg" alt="" />
+                <img class="avatar" src="~/img/avatars/@(user.Avatar > 0 ? $"avatar{user.Avatar}" : "avatarguest").jpg" alt="" />
                 <p>Angemeldet als <strong>@user.UserName</strong></p>
             </div>
             <p>Punkte: <strong id="account-score">@user.Score</strong></p>
