@@ -2,6 +2,8 @@
 
 Wordle für zwei Spieler in Echtzeit. Beide raten dasselbe Wort, wer es zuerst findet, gewinnt. Entstanden als Übung für SignalR.
 
+[Live-Demo](https://jegorowordle.sonic-reducer.de/)
+
 ## Stack
 
 ASP.NET Core 9 (MVC), SignalR, ASP.NET EF Core mit SQLite, ASP.NET Core  Identity, JS
